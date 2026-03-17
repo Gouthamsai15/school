@@ -81,22 +81,96 @@ async function startServer() {
     db.staff.push(newStaff);
     res.json({ success: true, staff: newStaff });
   });
+  app.put("/api/staff/:id", (req, res) => {
+    const index = db.staff.findIndex(s => s.id === req.params.id);
+    if (index !== -1) {
+      db.staff[index] = { ...db.staff[index], ...req.body };
+      res.json({ success: true });
+    } else res.status(404).json({ success: false });
+  });
+  app.delete("/api/staff/:id", (req, res) => {
+    const index = db.staff.findIndex(s => s.id === req.params.id);
+    if (index !== -1) {
+      db.staff.splice(index, 1);
+      res.json({ success: true });
+    } else res.status(404).json({ success: false });
+  });
 
   // Fees API
   app.get("/api/fees", (req, res) => res.json(db.fees));
+  app.post("/api/fees", (req, res) => {
+    const newFee = { id: Date.now().toString(), ...req.body };
+    db.fees.push(newFee);
+    res.json({ success: true, fee: newFee });
+  });
+  app.delete("/api/fees/:id", (req, res) => {
+    const index = db.fees.findIndex(f => f.id === req.params.id);
+    if (index !== -1) {
+      db.fees.splice(index, 1);
+      res.json({ success: true });
+    } else res.status(404).json({ success: false });
+  });
 
   // Transport API
   app.get("/api/transport", (req, res) => res.json(db.transport));
+  app.post("/api/transport", (req, res) => {
+    const newVehicle = { id: Date.now().toString(), ...req.body };
+    db.transport.push(newVehicle);
+    res.json({ success: true, vehicle: newVehicle });
+  });
+  app.delete("/api/transport/:id", (req, res) => {
+    const index = db.transport.findIndex(v => v.id === req.params.id);
+    if (index !== -1) {
+      db.transport.splice(index, 1);
+      res.json({ success: true });
+    } else res.status(404).json({ success: false });
+  });
 
   // Admissions API
   app.get("/api/admissions", (req, res) => res.json(db.admissions));
+  app.post("/api/admissions", (req, res) => {
+    const newAdm = { id: Date.now().toString(), ...req.body };
+    db.admissions.push(newAdm);
+    res.json({ success: true, admission: newAdm });
+  });
+  app.put("/api/admissions/:id", (req, res) => {
+    const index = db.admissions.findIndex(a => a.id === req.params.id);
+    if (index !== -1) {
+      db.admissions[index] = { ...db.admissions[index], ...req.body };
+      res.json({ success: true });
+    } else res.status(404).json({ success: false });
+  });
+  app.delete("/api/admissions/:id", (req, res) => {
+    const index = db.admissions.findIndex(a => a.id === req.params.id);
+    if (index !== -1) {
+      db.admissions.splice(index, 1);
+      res.json({ success: true });
+    } else res.status(404).json({ success: false });
+  });
 
   // Attendance API
-  app.get("/api/attendance", (req, res) => res.json(db.attendance));
+  app.get("/api/attendance", (req, res) => {
+    const { date } = req.query;
+    if (date) {
+      const filtered = db.attendance.filter(a => a.date === date);
+      return res.json(filtered);
+    }
+    res.json(db.attendance);
+  });
   app.post("/api/attendance", (req, res) => {
-    const record = { id: Date.now().toString(), ...req.body, date: new Date().toISOString().split('T')[0] };
-    db.attendance.push(record);
-    res.json({ success: true, record });
+    const { studentId, status, date } = req.body;
+    const targetDate = date || new Date().toISOString().split('T')[0];
+    
+    // Upsert logic
+    const index = db.attendance.findIndex(a => a.studentId === studentId && a.date === targetDate);
+    if (index !== -1) {
+      db.attendance[index].status = status;
+      res.json({ success: true, record: db.attendance[index], updated: true });
+    } else {
+      const record = { id: Date.now().toString(), studentId, status, date: targetDate };
+      db.attendance.push(record);
+      res.json({ success: true, record, updated: false });
+    }
   });
 
   // Exams API

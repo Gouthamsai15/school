@@ -236,7 +236,8 @@ async function renderStudentsModule(role: string = 'Admin') {
                                     <td class="px-6 py-4 text-sm text-slate-600">${s.grade}</td>
                                     <td class="px-6 py-4 text-sm text-slate-600">${s.section}</td>
                                     ${isAdmin ? `
-                                    <td class="px-6 py-4 text-sm">
+                                    <td class="px-6 py-4 text-sm flex gap-3">
+                                        <button onclick="window.editStudent('${s.id}')" class="text-indigo-600 hover:text-indigo-800 font-medium">Edit</button>
                                         <button onclick="window.deleteStudent('${s.id}')" class="text-rose-600 hover:text-rose-800 font-medium">Delete</button>
                                     </td>
                                     ` : ''}
@@ -268,6 +269,25 @@ async function renderStudentsModule(role: string = 'Admin') {
         renderStudentsModule();
     } catch (err) {
         console.error('Add student error:', err);
+    }
+};
+
+(window as any).editStudent = async (id: string) => {
+    const name = prompt("Update Student Name:");
+    if (!name) return;
+    const grade = prompt("Update Grade:");
+    const section = prompt("Update Section:");
+    const rollNo = prompt("Update Roll No:");
+
+    try {
+        await fetch(`/api/students/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, grade, section, rollNo })
+        });
+        renderStudentsModule();
+    } catch (err) {
+        console.error('Edit student error:', err);
     }
 };
 
@@ -304,6 +324,7 @@ async function renderStaffModule() {
                                 <th class="px-6 py-4 font-semibold">Name</th>
                                 <th class="px-6 py-4 font-semibold">Role</th>
                                 <th class="px-6 py-4 font-semibold">Department/Subject</th>
+                                <th class="px-6 py-4 font-semibold">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50">
@@ -312,6 +333,10 @@ async function renderStaffModule() {
                                     <td class="px-6 py-4 text-sm font-medium text-slate-900">${s.name}</td>
                                     <td class="px-6 py-4 text-sm text-slate-600">${s.role}</td>
                                     <td class="px-6 py-4 text-sm text-slate-600">${s.subject || s.department || 'N/A'}</td>
+                                    <td class="px-6 py-4 text-sm flex gap-3">
+                                        <button onclick="window.editStaff('${s.id}')" class="text-indigo-600 hover:text-indigo-800 font-medium">Edit</button>
+                                        <button onclick="window.deleteStaff('${s.id}')" class="text-rose-600 hover:text-rose-800 font-medium">Delete</button>
+                                    </td>
                                 </tr>
                             `).join('')}
                         </tbody>
@@ -323,6 +348,34 @@ async function renderStaffModule() {
         console.error('Staff fetch error:', err);
     }
 }
+
+(window as any).editStaff = async (id: string) => {
+    const name = prompt("Update Staff Name:");
+    if (!name) return;
+    const role = prompt("Update Role:");
+    const detail = prompt("Update Subject/Department:");
+
+    try {
+        await fetch(`/api/staff/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, role, subject: detail, department: detail })
+        });
+        renderStaffModule();
+    } catch (err) {
+        console.error('Edit staff error:', err);
+    }
+};
+
+(window as any).deleteStaff = async (id: string) => {
+    if (!confirm("Delete this staff member?")) return;
+    try {
+        await fetch(`/api/staff/${id}`, { method: 'DELETE' });
+        renderStaffModule();
+    } catch (err) {
+        console.error('Delete staff error:', err);
+    }
+};
 
 (window as any).addStaff = async () => {
     const name = prompt("Enter Staff Name:");
@@ -386,8 +439,11 @@ async function renderAccountsModule() {
 
         dashboardContent.innerHTML = `
             <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-                <div class="p-6 border-b border-slate-50">
+                <div class="p-6 border-b border-slate-50 flex justify-between items-center">
                     <h3 class="font-bold text-slate-900">Accounts - Fee Transactions</h3>
+                    <button onclick="window.addFee()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all">
+                        Add Transaction
+                    </button>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left">
@@ -397,6 +453,7 @@ async function renderAccountsModule() {
                                 <th class="px-6 py-4 font-semibold">Amount</th>
                                 <th class="px-6 py-4 font-semibold">Status</th>
                                 <th class="px-6 py-4 font-semibold">Date</th>
+                                <th class="px-6 py-4 font-semibold">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50">
@@ -410,6 +467,9 @@ async function renderAccountsModule() {
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 text-sm text-slate-500">${f.date}</td>
+                                    <td class="px-6 py-4 text-sm">
+                                        <button onclick="window.deleteFee('${f.id}')" class="text-rose-600 hover:text-rose-800 font-medium">Delete</button>
+                                    </td>
                                 </tr>
                             `).join('')}
                         </tbody>
@@ -422,6 +482,34 @@ async function renderAccountsModule() {
     }
 }
 
+(window as any).addFee = async () => {
+    const studentId = prompt("Enter Student ID:");
+    const amount = prompt("Enter Amount:");
+    const status = prompt("Status (Paid/Pending):");
+    const date = new Date().toISOString().split('T')[0];
+
+    try {
+        await fetch('/api/fees', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ studentId, amount: Number(amount), status, date })
+        });
+        renderAccountsModule();
+    } catch (err) {
+        console.error('Add fee error:', err);
+    }
+};
+
+(window as any).deleteFee = async (id: string) => {
+    if (!confirm("Delete transaction?")) return;
+    try {
+        await fetch(`/api/fees/${id}`, { method: 'DELETE' });
+        renderAccountsModule();
+    } catch (err) {
+        console.error('Delete fee error:', err);
+    }
+};
+
 async function renderTransportModule() {
     const dashboardContent = document.getElementById('dashboardContent');
     if (!dashboardContent) return;
@@ -432,10 +520,18 @@ async function renderTransportModule() {
 
         dashboardContent.innerHTML = `
             <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
-                <h3 class="font-bold text-slate-900 mb-6">Transport - Vehicle List</h3>
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="font-bold text-slate-900">Transport - Vehicle List</h3>
+                    <button onclick="window.addVehicle()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all">
+                        Add Vehicle
+                    </button>
+                </div>
                 <div class="grid md:grid-cols-2 gap-6">
                     ${transport.map((v: any) => `
-                        <div class="p-6 bg-slate-50 rounded-3xl border border-slate-100">
+                        <div class="p-6 bg-slate-50 rounded-3xl border border-slate-100 relative">
+                            <button onclick="window.deleteVehicle('${v.id}')" class="absolute top-4 right-4 text-rose-600 hover:text-rose-800">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            </button>
                             <div class="flex justify-between items-start mb-4">
                                 <div class="w-12 h-12 bg-amber-100 rounded-2xl flex items-center justify-center text-amber-600">
                                     ${getIcon('Bus')}
@@ -457,6 +553,33 @@ async function renderTransportModule() {
     }
 }
 
+(window as any).addVehicle = async () => {
+    const vehicleNo = prompt("Enter Vehicle No:");
+    const route = prompt("Enter Route:");
+    const driver = prompt("Enter Driver Name:");
+
+    try {
+        await fetch('/api/transport', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ vehicleNo, route, driver })
+        });
+        renderTransportModule();
+    } catch (err) {
+        console.error('Add vehicle error:', err);
+    }
+};
+
+(window as any).deleteVehicle = async (id: string) => {
+    if (!confirm("Delete vehicle?")) return;
+    try {
+        await fetch(`/api/transport/${id}`, { method: 'DELETE' });
+        renderTransportModule();
+    } catch (err) {
+        console.error('Delete vehicle error:', err);
+    }
+};
+
 async function renderAdmissionModule() {
     const dashboardContent = document.getElementById('dashboardContent');
     if (!dashboardContent) return;
@@ -467,8 +590,11 @@ async function renderAdmissionModule() {
 
         dashboardContent.innerHTML = `
             <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-                <div class="p-6 border-b border-slate-50">
+                <div class="p-6 border-b border-slate-50 flex justify-between items-center">
                     <h3 class="font-bold text-slate-900">Admission - Applicant List</h3>
+                    <button onclick="window.addAdmission()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all">
+                        New Admission
+                    </button>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left">
@@ -477,6 +603,7 @@ async function renderAdmissionModule() {
                                 <th class="px-6 py-4 font-semibold">Applicant Name</th>
                                 <th class="px-6 py-4 font-semibold">Grade Applied</th>
                                 <th class="px-6 py-4 font-semibold">Status</th>
+                                <th class="px-6 py-4 font-semibold">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50">
@@ -488,6 +615,10 @@ async function renderAdmissionModule() {
                                         <span class="px-2 py-1 rounded-full text-[10px] font-bold uppercase ${a.status === 'Approved' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">
                                             ${a.status}
                                         </span>
+                                    </td>
+                                    <td class="px-6 py-4 text-sm flex gap-3">
+                                        <button onclick="window.updateAdmissionStatus('${a.id}', 'Approved')" class="text-emerald-600 hover:underline">Approve</button>
+                                        <button onclick="window.deleteAdmission('${a.id}')" class="text-rose-600 hover:underline">Delete</button>
                                     </td>
                                 </tr>
                             `).join('')}
@@ -501,56 +632,169 @@ async function renderAdmissionModule() {
     }
 }
 
+(window as any).addAdmission = async () => {
+    const applicantName = prompt("Enter Applicant Name:");
+    const grade = prompt("Enter Grade:");
+
+    try {
+        await fetch('/api/admissions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ applicantName, grade, status: 'Pending' })
+        });
+        renderAdmissionModule();
+    } catch (err) {
+        console.error('Add admission error:', err);
+    }
+};
+
+(window as any).updateAdmissionStatus = async (id: string, status: string) => {
+    try {
+        await fetch(`/api/admissions/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status })
+        });
+        renderAdmissionModule();
+    } catch (err) {
+        console.error('Update admission error:', err);
+    }
+};
+
+(window as any).deleteAdmission = async (id: string) => {
+    if (!confirm("Delete admission?")) return;
+    try {
+        await fetch(`/api/admissions/${id}`, { method: 'DELETE' });
+        renderAdmissionModule();
+    } catch (err) {
+        console.error('Delete admission error:', err);
+    }
+};
+
 async function renderAttendanceModule() {
     const dashboardContent = document.getElementById('dashboardContent');
     if (!dashboardContent) return;
 
-    try {
-        const res = await fetch('/api/students');
-        const students = await res.json();
+    const today = new Date().toISOString().split('T')[0];
+    let selectedDate = today;
 
-        dashboardContent.innerHTML = `
-            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-                <div class="p-6 border-b border-slate-50 flex justify-between items-center">
-                    <h3 class="font-bold text-slate-900">Mark Attendance</h3>
-                    <div class="text-sm text-slate-500">Date: ${new Date().toLocaleDateString()}</div>
-                </div>
-                <div class="p-6">
-                    <div class="grid gap-4">
-                        ${students.map((s: any) => `
-                            <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                <div class="flex items-center gap-4">
-                                    <div class="text-sm font-bold text-slate-900">${s.rollNo}</div>
-                                    <div class="text-sm font-medium text-slate-700">${s.name}</div>
-                                </div>
+    const loadAttendance = async (date: string) => {
+        try {
+            const [studentsRes, attendanceRes] = await Promise.all([
+                fetch('/api/students'),
+                fetch(`/api/attendance?date=${date}`)
+            ]);
+            const students = await studentsRes.json();
+            const attendance = await attendanceRes.json();
+
+            const attendanceMap = new Map(attendance.map((a: any) => [a.studentId, a.status]));
+
+            const listContainer = document.getElementById('attendanceList');
+            if (listContainer) {
+                listContainer.innerHTML = students.map((s: any) => {
+                    const status = attendanceMap.get(s.id) || 'Not Marked';
+                    return `
+                        <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                            <div class="flex items-center gap-4">
+                                <div class="text-sm font-bold text-slate-900">${s.rollNo}</div>
+                                <div class="text-sm font-medium text-slate-700">${s.name}</div>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <span class="text-[10px] font-bold uppercase px-2 py-1 rounded-lg ${status === 'Present' ? 'bg-emerald-100 text-emerald-700' : status === 'Absent' ? 'bg-rose-100 text-rose-700' : 'bg-slate-200 text-slate-600'}">
+                                    ${status}
+                                </span>
                                 <div class="flex gap-2">
-                                    <button onclick="window.markAttendance('${s.id}', 'Present')" class="px-4 py-2 bg-emerald-100 text-emerald-700 rounded-xl text-xs font-bold hover:bg-emerald-200 transition-all">Present</button>
-                                    <button onclick="window.markAttendance('${s.id}', 'Absent')" class="px-4 py-2 bg-rose-100 text-rose-700 rounded-xl text-xs font-bold hover:bg-rose-200 transition-all">Absent</button>
+                                    <button onclick="window.markAttendance('${s.id}', 'Present', '${date}')" class="px-3 py-1 bg-emerald-600 text-white rounded-lg text-[10px] font-bold hover:bg-emerald-700 transition-all">P</button>
+                                    <button onclick="window.markAttendance('${s.id}', 'Absent', '${date}')" class="px-3 py-1 bg-rose-600 text-white rounded-lg text-[10px] font-bold hover:bg-rose-700 transition-all">A</button>
                                 </div>
                             </div>
-                        `).join('')}
-                    </div>
-                    <button onclick="alert('Attendance saved successfully!')" class="mt-8 w-full bg-indigo-600 text-white py-4 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg">
-                        Save Attendance
-                    </button>
+                        </div>
+                    `;
+                }).join('');
+            }
+        } catch (err) {
+            console.error('Load attendance error:', err);
+        }
+    };
+
+    dashboardContent.innerHTML = `
+        <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+            <div class="p-6 border-b border-slate-50 flex justify-between items-center">
+                <h3 class="font-bold text-slate-900">Attendance Management</h3>
+                <div class="flex items-center gap-3">
+                    <label class="text-xs font-bold text-slate-500">Select Date:</label>
+                    <input type="date" id="attendanceDatePicker" value="${today}" class="px-3 py-2 rounded-xl border border-slate-200 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
             </div>
-        `;
-    } catch (err) {
-        console.error('Attendance fetch error:', err);
-    }
+            <div class="p-6">
+                <div id="attendanceList" class="grid gap-4">
+                    <!-- Loaded dynamically -->
+                    <div class="text-center py-12 text-slate-400">Loading students...</div>
+                </div>
+                <button onclick="alert('Attendance for ' + document.getElementById('attendanceDatePicker').value + ' has been finalized.')" class="mt-8 w-full bg-indigo-600 text-white py-4 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg">
+                    Finalize Attendance
+                </button>
+            </div>
+        </div>
+    `;
+
+    const datePicker = document.getElementById('attendanceDatePicker') as HTMLInputElement;
+    datePicker.addEventListener('change', (e) => {
+        selectedDate = (e.target as HTMLInputElement).value;
+        loadAttendance(selectedDate);
+    });
+
+    loadAttendance(selectedDate);
 }
 
-(window as any).markAttendance = async (studentId: string, status: string) => {
+(window as any).markAttendance = async (studentId: string, status: string, date: string) => {
     try {
         await fetch('/api/attendance', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ studentId, status })
+            body: JSON.stringify({ studentId, status, date })
         });
-        console.log(`Marked ${studentId} as ${status}`);
+        // Refresh the list
+        const datePicker = document.getElementById('attendanceDatePicker') as HTMLInputElement;
+        if (datePicker) {
+            const currentFunc = (window as any).refreshAttendance;
+            if (typeof currentFunc === 'function') currentFunc(datePicker.value);
+        }
     } catch (err) {
         console.error('Mark attendance error:', err);
+    }
+};
+
+// Helper to refresh attendance list without full re-render
+(window as any).refreshAttendance = async (date: string) => {
+    const studentsRes = await fetch('/api/students');
+    const attendanceRes = await fetch(`/api/attendance?date=${date}`);
+    const students = await studentsRes.json();
+    const attendance = await attendanceRes.json();
+    const attendanceMap = new Map(attendance.map((a: any) => [a.studentId, a.status]));
+
+    const listContainer = document.getElementById('attendanceList');
+    if (listContainer) {
+        listContainer.innerHTML = students.map((s: any) => {
+            const status = attendanceMap.get(s.id) || 'Not Marked';
+            return `
+                <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    <div class="flex items-center gap-4">
+                        <div class="text-sm font-bold text-slate-900">${s.rollNo}</div>
+                        <div class="text-sm font-medium text-slate-700">${s.name}</div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <span class="text-[10px] font-bold uppercase px-2 py-1 rounded-lg ${status === 'Present' ? 'bg-emerald-100 text-emerald-700' : status === 'Absent' ? 'bg-rose-100 text-rose-700' : 'bg-slate-200 text-slate-600'}">
+                            ${status}
+                        </span>
+                        <div class="flex gap-2">
+                            <button onclick="window.markAttendance('${s.id}', 'Present', '${date}')" class="px-3 py-1 bg-emerald-600 text-white rounded-lg text-[10px] font-bold hover:bg-emerald-700 transition-all">P</button>
+                            <button onclick="window.markAttendance('${s.id}', 'Absent', '${date}')" class="px-3 py-1 bg-rose-600 text-white rounded-lg text-[10px] font-bold hover:bg-rose-700 transition-all">A</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
     }
 };
 
