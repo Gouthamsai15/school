@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INDDIA ERP - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen flex">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-white border-r border-slate-200 flex flex-col sticky top-0 h-screen">
+        <div class="p-6 border-b border-slate-100">
+            <div class="text-xl font-bold text-indigo-600">INDDIA ERP</div>
+        </div>
+        <nav class="flex-1 p-4 space-y-2 overflow-y-auto" id="sidebarNav">
+            <!-- Dynamic Nav Items -->
+        </nav>
+        <div class="p-4 border-t border-slate-100">
+            <button id="logoutBtn" class="w-full flex items-center gap-3 px-4 py-3 text-rose-600 hover:bg-rose-50 rounded-xl transition-colors font-medium">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                Logout
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col min-h-screen">
+        <header class="bg-white border-b border-slate-200 px-8 py-4 flex justify-between items-center sticky top-0 z-10">
+            <h2 class="text-xl font-bold text-slate-800" id="pageTitle">Dashboard</h2>
+            <div class="flex items-center gap-4">
+                <div class="text-right">
+                    <div class="text-sm font-bold text-slate-900" id="userNameDisplay">User</div>
+                    <div class="text-xs text-slate-500" id="userRoleDisplay">Role</div>
+                </div>
+                <div class="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold">
+                    U
+                </div>
+            </div>
+        </header>
+
+        <div class="p-8 flex-1" id="dashboardContent">
+            <!-- Dynamic Content -->
+        </div>
+    </main>
+
+    <script type="module" src="/src/dashboard.ts"></script>
+</body>
+</html>
