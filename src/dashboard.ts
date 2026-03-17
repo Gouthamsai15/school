@@ -111,49 +111,26 @@ function renderContent(role: string, pageId: string = 'dashboard', pageLabel: st
 
     pageTitle.textContent = pageLabel;
 
-    let html = '';
-    
     if (pageId === 'dashboard') {
-        html = `
-            <div class="grid md:grid-cols-3 gap-6 mb-8">
-                <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
-                    <div class="text-slate-500 text-sm font-medium mb-1">Status</div>
-                    <div class="text-2xl font-bold text-slate-900">Active Session</div>
-                    <div class="text-emerald-500 text-xs font-medium mt-2 flex items-center gap-1">
-                        <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-                        Connected as ${role}
-                    </div>
-                </div>
-                <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
-                    <div class="text-slate-500 text-sm font-medium mb-1">Notifications</div>
-                    <div class="text-2xl font-bold text-slate-900">3 New Alerts</div>
-                    <div class="text-indigo-500 text-xs font-medium mt-2">View all notifications</div>
-                </div>
-                <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
-                    <div class="text-slate-500 text-sm font-medium mb-1">Quick Action</div>
-                    <div class="text-2xl font-bold text-slate-900">Generate Report</div>
-                    <div class="text-slate-400 text-xs font-medium mt-2 italic">Last run 2h ago</div>
-                </div>
-            </div>
-
-            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-                <div class="p-6 border-b border-slate-50 flex justify-between items-center">
-                    <h3 class="font-bold text-slate-900">Role Specific Overview: ${role}</h3>
-                    <button class="text-indigo-600 text-sm font-medium">Refresh</button>
-                </div>
-                <div class="p-12 text-center">
-                    <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                        ${getIcon('LayoutDashboard')}
-                    </div>
-                    <h4 class="text-xl font-bold text-slate-900 mb-2">Welcome to your ${role} Portal</h4>
-                    <p class="text-slate-500 max-w-md mx-auto">
-                        This dashboard is dynamically tailored for your role. Use the sidebar to navigate through your specific modules.
-                    </p>
-                </div>
-            </div>
-        `;
+        renderDashboardStats(role);
+    } else if (pageId === 'students') {
+        renderStudentsModule(role);
+    } else if (pageId === 'staff') {
+        renderStaffModule();
+    } else if (pageId === 'hr') {
+        renderHRModule();
+    } else if (pageId === 'accounts') {
+        renderAccountsModule();
+    } else if (pageId === 'transport') {
+        renderTransportModule();
+    } else if (pageId === 'admission') {
+        renderAdmissionModule();
+    } else if (pageId === 'attendance') {
+        renderAttendanceModule();
+    } else if (pageId === 'exams') {
+        renderExamsModule();
     } else {
-        html = `
+        dashboardContent.innerHTML = `
             <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-12 text-center">
                 <h3 class="text-2xl font-bold text-slate-900 mb-4">${pageLabel} Module</h3>
                 <p class="text-slate-500">This section is currently being populated with ${role} specific data for ${pageLabel}.</p>
@@ -163,9 +140,485 @@ function renderContent(role: string, pageId: string = 'dashboard', pageLabel: st
             </div>
         `;
     }
-
-    dashboardContent.innerHTML = html;
 }
+
+async function renderDashboardStats(role: string) {
+    const dashboardContent = document.getElementById('dashboardContent');
+    if (!dashboardContent) return;
+
+    try {
+        const res = await fetch('/api/stats');
+        const stats = await res.json();
+
+        const isTeacher = role === 'Teaching Staff';
+
+        dashboardContent.innerHTML = `
+            <div class="grid md:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+                    <div class="text-slate-500 text-sm font-medium mb-1">${isTeacher ? 'My Students' : 'Total Students'}</div>
+                    <div class="text-3xl font-bold text-slate-900">${isTeacher ? '42' : stats.totalStudents}</div>
+                    <div class="text-emerald-500 text-xs font-medium mt-2">↑ 12% from last month</div>
+                </div>
+                <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+                    <div class="text-slate-500 text-sm font-medium mb-1">${isTeacher ? 'Assigned Classes' : 'Total Staff'}</div>
+                    <div class="text-3xl font-bold text-slate-900">${isTeacher ? '4' : stats.totalStaff}</div>
+                    <div class="text-indigo-500 text-xs font-medium mt-2">Active now</div>
+                </div>
+                <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+                    <div class="text-slate-500 text-sm font-medium mb-1">Fees Collected</div>
+                    <div class="text-3xl font-bold text-slate-900">₹${stats.feesCollected}</div>
+                    <div class="text-amber-500 text-xs font-medium mt-2">85% of target</div>
+                </div>
+                <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+                    <div class="text-slate-500 text-sm font-medium mb-1">Attendance</div>
+                    <div class="text-3xl font-bold text-slate-900">${stats.attendanceRate}</div>
+                    <div class="text-rose-500 text-xs font-medium mt-2">Today's average</div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+                <div class="p-6 border-b border-slate-50 flex justify-between items-center">
+                    <h3 class="font-bold text-slate-900">${isTeacher ? 'Teacher Overview' : 'Admin Overview'}</h3>
+                    <button class="text-indigo-600 text-sm font-medium">Refresh Data</button>
+                </div>
+                <div class="p-12 text-center">
+                    <div class="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                        ${getIcon('LayoutDashboard')}
+                    </div>
+                    <h4 class="text-xl font-bold text-slate-900 mb-2">Welcome to INDDIA ERP ${role} Panel</h4>
+                    <p class="text-slate-500 max-w-md mx-auto">
+                        ${isTeacher ? 'Manage your assigned classes, mark attendance, and enter exam results efficiently.' : 'You have full control over the system. Manage students, staff, finances, and transport from this central hub.'}
+                    </p>
+                </div>
+            </div>
+        `;
+    } catch (err) {
+        console.error('Stats fetch error:', err);
+    }
+}
+
+async function renderStudentsModule(role: string = 'Admin') {
+    const dashboardContent = document.getElementById('dashboardContent');
+    if (!dashboardContent) return;
+
+    try {
+        const res = await fetch('/api/students');
+        const students = await res.json();
+
+        const isAdmin = role === 'Admin';
+
+        dashboardContent.innerHTML = `
+            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+                <div class="p-6 border-b border-slate-50 flex justify-between items-center">
+                    <h3 class="font-bold text-slate-900">Student Management</h3>
+                    ${isAdmin ? `
+                    <button onclick="window.addStudent()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all">
+                        Add New Student
+                    </button>
+                    ` : ''}
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
+                            <tr>
+                                <th class="px-6 py-4 font-semibold">Roll No</th>
+                                <th class="px-6 py-4 font-semibold">Name</th>
+                                <th class="px-6 py-4 font-semibold">Grade</th>
+                                <th class="px-6 py-4 font-semibold">Section</th>
+                                ${isAdmin ? '<th class="px-6 py-4 font-semibold">Actions</th>' : ''}
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-50">
+                            ${students.map((s: any) => `
+                                <tr class="hover:bg-slate-50 transition-colors">
+                                    <td class="px-6 py-4 text-sm font-medium text-slate-900">${s.rollNo}</td>
+                                    <td class="px-6 py-4 text-sm text-slate-600">${s.name}</td>
+                                    <td class="px-6 py-4 text-sm text-slate-600">${s.grade}</td>
+                                    <td class="px-6 py-4 text-sm text-slate-600">${s.section}</td>
+                                    ${isAdmin ? `
+                                    <td class="px-6 py-4 text-sm">
+                                        <button onclick="window.deleteStudent('${s.id}')" class="text-rose-600 hover:text-rose-800 font-medium">Delete</button>
+                                    </td>
+                                    ` : ''}
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+    } catch (err) {
+        console.error('Students fetch error:', err);
+    }
+}
+
+(window as any).addStudent = async () => {
+    const name = prompt("Enter Student Name:");
+    if (!name) return;
+    const grade = prompt("Enter Grade (e.g. 10th):");
+    const section = prompt("Enter Section (e.g. A):");
+    const rollNo = prompt("Enter Roll No:");
+
+    try {
+        await fetch('/api/students', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, grade, section, rollNo })
+        });
+        renderStudentsModule();
+    } catch (err) {
+        console.error('Add student error:', err);
+    }
+};
+
+(window as any).deleteStudent = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this student?")) return;
+    try {
+        await fetch(`/api/students/${id}`, { method: 'DELETE' });
+        renderStudentsModule();
+    } catch (err) {
+        console.error('Delete student error:', err);
+    }
+};
+
+async function renderStaffModule() {
+    const dashboardContent = document.getElementById('dashboardContent');
+    if (!dashboardContent) return;
+
+    try {
+        const res = await fetch('/api/staff');
+        const staff = await res.json();
+
+        dashboardContent.innerHTML = `
+            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+                <div class="p-6 border-b border-slate-50 flex justify-between items-center">
+                    <h3 class="font-bold text-slate-900">Staff Directory</h3>
+                    <button onclick="window.addStaff()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all">
+                        Add New Staff
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
+                            <tr>
+                                <th class="px-6 py-4 font-semibold">Name</th>
+                                <th class="px-6 py-4 font-semibold">Role</th>
+                                <th class="px-6 py-4 font-semibold">Department/Subject</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-50">
+                            ${staff.map((s: any) => `
+                                <tr class="hover:bg-slate-50 transition-colors">
+                                    <td class="px-6 py-4 text-sm font-medium text-slate-900">${s.name}</td>
+                                    <td class="px-6 py-4 text-sm text-slate-600">${s.role}</td>
+                                    <td class="px-6 py-4 text-sm text-slate-600">${s.subject || s.department || 'N/A'}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+    } catch (err) {
+        console.error('Staff fetch error:', err);
+    }
+}
+
+(window as any).addStaff = async () => {
+    const name = prompt("Enter Staff Name:");
+    if (!name) return;
+    const role = prompt("Enter Role (Teaching/Non-Teaching):");
+    const detail = prompt("Enter Subject or Department:");
+
+    try {
+        await fetch('/api/staff', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, role, subject: detail, department: detail })
+        });
+        renderStaffModule();
+    } catch (err) {
+        console.error('Add staff error:', err);
+    }
+};
+
+async function renderHRModule() {
+    const dashboardContent = document.getElementById('dashboardContent');
+    if (!dashboardContent) return;
+
+    try {
+        const res = await fetch('/api/staff');
+        const staff = await res.json();
+
+        dashboardContent.innerHTML = `
+            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
+                <h3 class="font-bold text-slate-900 mb-6">HR - Employee List</h3>
+                <div class="grid gap-4">
+                    ${staff.map((s: any) => `
+                        <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                            <div class="flex items-center gap-4">
+                                <div class="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold">
+                                    ${s.name.charAt(0)}
+                                </div>
+                                <div>
+                                    <div class="font-bold text-slate-900">${s.name}</div>
+                                    <div class="text-xs text-slate-500">${s.role}</div>
+                                </div>
+                            </div>
+                            <button class="text-indigo-600 text-sm font-medium hover:underline">View Profile</button>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    } catch (err) {
+        console.error('HR fetch error:', err);
+    }
+}
+
+async function renderAccountsModule() {
+    const dashboardContent = document.getElementById('dashboardContent');
+    if (!dashboardContent) return;
+
+    try {
+        const res = await fetch('/api/fees');
+        const fees = await res.json();
+
+        dashboardContent.innerHTML = `
+            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+                <div class="p-6 border-b border-slate-50">
+                    <h3 class="font-bold text-slate-900">Accounts - Fee Transactions</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
+                            <tr>
+                                <th class="px-6 py-4 font-semibold">Student ID</th>
+                                <th class="px-6 py-4 font-semibold">Amount</th>
+                                <th class="px-6 py-4 font-semibold">Status</th>
+                                <th class="px-6 py-4 font-semibold">Date</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-50">
+                            ${fees.map((f: any) => `
+                                <tr class="hover:bg-slate-50 transition-colors">
+                                    <td class="px-6 py-4 text-sm text-slate-600">#STU-${f.studentId}</td>
+                                    <td class="px-6 py-4 text-sm font-bold text-slate-900">₹${f.amount}</td>
+                                    <td class="px-6 py-4 text-sm">
+                                        <span class="px-2 py-1 rounded-full text-[10px] font-bold uppercase ${f.status === 'Paid' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">
+                                            ${f.status}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 text-sm text-slate-500">${f.date}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+    } catch (err) {
+        console.error('Accounts fetch error:', err);
+    }
+}
+
+async function renderTransportModule() {
+    const dashboardContent = document.getElementById('dashboardContent');
+    if (!dashboardContent) return;
+
+    try {
+        const res = await fetch('/api/transport');
+        const transport = await res.json();
+
+        dashboardContent.innerHTML = `
+            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
+                <h3 class="font-bold text-slate-900 mb-6">Transport - Vehicle List</h3>
+                <div class="grid md:grid-cols-2 gap-6">
+                    ${transport.map((v: any) => `
+                        <div class="p-6 bg-slate-50 rounded-3xl border border-slate-100">
+                            <div class="flex justify-between items-start mb-4">
+                                <div class="w-12 h-12 bg-amber-100 rounded-2xl flex items-center justify-center text-amber-600">
+                                    ${getIcon('Bus')}
+                                </div>
+                                <span class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-[10px] font-bold uppercase">Active</span>
+                            </div>
+                            <div class="text-lg font-bold text-slate-900 mb-1">${v.vehicleNo}</div>
+                            <div class="text-sm text-slate-500 mb-4">${v.route}</div>
+                            <div class="flex items-center gap-2 text-xs text-slate-600">
+                                <span class="font-bold">Driver:</span> ${v.driver}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    } catch (err) {
+        console.error('Transport fetch error:', err);
+    }
+}
+
+async function renderAdmissionModule() {
+    const dashboardContent = document.getElementById('dashboardContent');
+    if (!dashboardContent) return;
+
+    try {
+        const res = await fetch('/api/admissions');
+        const admissions = await res.json();
+
+        dashboardContent.innerHTML = `
+            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+                <div class="p-6 border-b border-slate-50">
+                    <h3 class="font-bold text-slate-900">Admission - Applicant List</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
+                            <tr>
+                                <th class="px-6 py-4 font-semibold">Applicant Name</th>
+                                <th class="px-6 py-4 font-semibold">Grade Applied</th>
+                                <th class="px-6 py-4 font-semibold">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-50">
+                            ${admissions.map((a: any) => `
+                                <tr class="hover:bg-slate-50 transition-colors">
+                                    <td class="px-6 py-4 text-sm font-medium text-slate-900">${a.applicantName}</td>
+                                    <td class="px-6 py-4 text-sm text-slate-600">${a.grade}</td>
+                                    <td class="px-6 py-4 text-sm">
+                                        <span class="px-2 py-1 rounded-full text-[10px] font-bold uppercase ${a.status === 'Approved' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">
+                                            ${a.status}
+                                        </span>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+    } catch (err) {
+        console.error('Admission fetch error:', err);
+    }
+}
+
+async function renderAttendanceModule() {
+    const dashboardContent = document.getElementById('dashboardContent');
+    if (!dashboardContent) return;
+
+    try {
+        const res = await fetch('/api/students');
+        const students = await res.json();
+
+        dashboardContent.innerHTML = `
+            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+                <div class="p-6 border-b border-slate-50 flex justify-between items-center">
+                    <h3 class="font-bold text-slate-900">Mark Attendance</h3>
+                    <div class="text-sm text-slate-500">Date: ${new Date().toLocaleDateString()}</div>
+                </div>
+                <div class="p-6">
+                    <div class="grid gap-4">
+                        ${students.map((s: any) => `
+                            <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                <div class="flex items-center gap-4">
+                                    <div class="text-sm font-bold text-slate-900">${s.rollNo}</div>
+                                    <div class="text-sm font-medium text-slate-700">${s.name}</div>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button onclick="window.markAttendance('${s.id}', 'Present')" class="px-4 py-2 bg-emerald-100 text-emerald-700 rounded-xl text-xs font-bold hover:bg-emerald-200 transition-all">Present</button>
+                                    <button onclick="window.markAttendance('${s.id}', 'Absent')" class="px-4 py-2 bg-rose-100 text-rose-700 rounded-xl text-xs font-bold hover:bg-rose-200 transition-all">Absent</button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <button onclick="alert('Attendance saved successfully!')" class="mt-8 w-full bg-indigo-600 text-white py-4 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg">
+                        Save Attendance
+                    </button>
+                </div>
+            </div>
+        `;
+    } catch (err) {
+        console.error('Attendance fetch error:', err);
+    }
+}
+
+(window as any).markAttendance = async (studentId: string, status: string) => {
+    try {
+        await fetch('/api/attendance', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ studentId, status })
+        });
+        console.log(`Marked ${studentId} as ${status}`);
+    } catch (err) {
+        console.error('Mark attendance error:', err);
+    }
+};
+
+async function renderExamsModule() {
+    const dashboardContent = document.getElementById('dashboardContent');
+    if (!dashboardContent) return;
+
+    try {
+        const res = await fetch('/api/students');
+        const students = await res.json();
+
+        dashboardContent.innerHTML = `
+            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+                <div class="p-6 border-b border-slate-50">
+                    <h3 class="font-bold text-slate-900">Enter Exam Marks</h3>
+                </div>
+                <div class="p-6">
+                    <div class="mb-6">
+                        <label class="block text-sm font-semibold text-slate-700 mb-2">Select Exam</label>
+                        <select id="examType" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option>Mid-Term Exam</option>
+                            <option>Final Exam</option>
+                            <option>Unit Test 1</option>
+                        </select>
+                    </div>
+                    <div class="grid gap-4">
+                        ${students.map((s: any) => `
+                            <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                <div class="flex items-center gap-4">
+                                    <div class="text-sm font-bold text-slate-900">${s.rollNo}</div>
+                                    <div class="text-sm font-medium text-slate-700">${s.name}</div>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <input type="number" id="marks-${s.id}" placeholder="Marks" class="w-24 px-3 py-2 rounded-lg border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                                    <button onclick="window.saveMarks('${s.id}')" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-indigo-700 transition-all">Save</button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+    } catch (err) {
+        console.error('Exams fetch error:', err);
+    }
+}
+
+(window as any).saveMarks = async (studentId: string) => {
+    const marksInput = document.getElementById(`marks-${studentId}`) as HTMLInputElement;
+    const examType = (document.getElementById('examType') as HTMLSelectElement).value;
+    const marks = marksInput?.value;
+
+    if (!marks) {
+        alert("Please enter marks");
+        return;
+    }
+
+    try {
+        await fetch('/api/exams', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ studentId, examType, marks })
+        });
+        alert(`Marks saved for student ${studentId}`);
+    } catch (err) {
+        console.error('Save marks error:', err);
+    }
+};
 
 function startDashboard() {
     console.log('Starting dashboard script');
