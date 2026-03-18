@@ -167,7 +167,7 @@ async function startServer() {
 
   // Attendance API
   app.get("/api/attendance", (req, res) => {
-    const { date, studentId } = req.query;
+    const { date, studentId, subject } = req.query;
     let filtered = db.attendance;
     if (date) {
       filtered = filtered.filter(a => a.date === date);
@@ -175,19 +175,35 @@ async function startServer() {
     if (studentId) {
       filtered = filtered.filter(a => a.studentId === studentId);
     }
+    if (subject) {
+      filtered = filtered.filter(a => a.subject === subject);
+    }
     res.json(filtered);
   });
   app.post("/api/attendance", (req, res) => {
-    const { studentId, status, date } = req.body;
+    const { studentId, status, date, subject, time } = req.body;
     const targetDate = date || new Date().toISOString().split('T')[0];
     
-    // Upsert logic
-    const index = db.attendance.findIndex(a => a.studentId === studentId && a.date === targetDate);
+    // Upsert logic based on student, date, and subject
+    const index = db.attendance.findIndex(a => 
+      a.studentId === studentId && 
+      a.date === targetDate && 
+      a.subject === subject
+    );
+    
     if (index !== -1) {
       db.attendance[index].status = status;
+      db.attendance[index].time = time || db.attendance[index].time;
       res.json({ success: true, record: db.attendance[index], updated: true });
     } else {
-      const record = { id: Date.now().toString(), studentId, status, date: targetDate };
+      const record = { 
+        id: Date.now().toString(), 
+        studentId, 
+        status, 
+        date: targetDate, 
+        subject: subject || 'General', 
+        time: time || '09:00 AM' 
+      };
       db.attendance.push(record);
       res.json({ success: true, record, updated: false });
     }

@@ -762,12 +762,14 @@ async function renderAttendanceModule() {
 
     const today = new Date().toISOString().split('T')[0];
     let selectedDate = today;
+    let selectedSubject = 'Mathematics';
+    let selectedTime = '09:00 AM';
 
-    const loadAttendance = async (date: string) => {
+    const loadAttendance = async (date: string, subject: string) => {
         try {
             const [studentsRes, attendanceRes] = await Promise.all([
                 fetch('/api/students'),
-                fetch(`/api/attendance?date=${date}`)
+                fetch(`/api/attendance?date=${date}&subject=${subject}`)
             ]);
             const students = await studentsRes.json();
             const attendance = await attendanceRes.json();
@@ -776,6 +778,11 @@ async function renderAttendanceModule() {
 
             const listContainer = document.getElementById('attendanceList');
             if (listContainer) {
+                if (students.length === 0) {
+                    listContainer.innerHTML = '<div class="text-center py-12 text-slate-400">No students found.</div>';
+                    return;
+                }
+
                 listContainer.innerHTML = students.map((s: any) => {
                     const status = attendanceMap.get(s.id) || 'Not Marked';
                     return `
@@ -789,8 +796,8 @@ async function renderAttendanceModule() {
                                     ${status}
                                 </span>
                                 <div class="flex gap-2">
-                                    <button onclick="window.markAttendance('${s.id}', 'Present', '${date}')" class="px-3 py-1 bg-emerald-600 text-white rounded-lg text-[10px] font-bold hover:bg-emerald-700 transition-all">P</button>
-                                    <button onclick="window.markAttendance('${s.id}', 'Absent', '${date}')" class="px-3 py-1 bg-rose-600 text-white rounded-lg text-[10px] font-bold hover:bg-rose-700 transition-all">A</button>
+                                    <button onclick="window.markAttendance('${s.id}', 'Present', '${date}', '${subject}', '${selectedTime}')" class="px-3 py-1 bg-emerald-600 text-white rounded-lg text-[10px] font-bold hover:bg-emerald-700 transition-all">P</button>
+                                    <button onclick="window.markAttendance('${s.id}', 'Absent', '${date}', '${subject}', '${selectedTime}')" class="px-3 py-1 bg-rose-600 text-white rounded-lg text-[10px] font-bold hover:bg-rose-700 transition-all">A</button>
                                 </div>
                             </div>
                         </div>
@@ -802,48 +809,132 @@ async function renderAttendanceModule() {
         }
     };
 
+    const loadRecentLogs = async () => {
+        try {
+            const res = await fetch('/api/attendance');
+            const allAttendance = await res.json();
+            allAttendance.sort((a: any, b: any) => b.date.localeCompare(a.date));
+            
+            const logsContainer = document.getElementById('recentAttendanceLogs');
+            if (logsContainer) {
+                const recent = allAttendance.slice(0, 30);
+                if (recent.length === 0) {
+                    logsContainer.innerHTML = '<div class="text-center py-4 text-slate-400 text-sm">No recent logs.</div>';
+                    return;
+                }
+
+                const grouped: any = {};
+                recent.forEach((curr: any) => {
+                    const key = `${curr.date} - ${curr.subject}`;
+                    if (!grouped[key]) grouped[key] = { date: curr.date, subject: curr.subject, count: 0 };
+                    grouped[key].count++;
+                });
+
+                logsContainer.innerHTML = Object.values(grouped).map((g: any) => `
+                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100 mb-2">
+                        <div>
+                            <div class="text-sm font-bold text-slate-900">${g.subject}</div>
+                            <div class="text-xs text-slate-500">${g.date}</div>
+                        </div>
+                        <div class="text-xs font-medium text-indigo-600">${g.count} Students</div>
+                    </div>
+                `).join('');
+            }
+        } catch (err) {
+            console.error('Load logs error:', err);
+        }
+    };
+
     dashboardContent.innerHTML = `
-        <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-            <div class="p-6 border-b border-slate-50 flex justify-between items-center">
-                <h3 class="font-bold text-slate-900">Attendance Management</h3>
-                <div class="flex items-center gap-3">
-                    <label class="text-xs font-bold text-slate-500">Select Date:</label>
-                    <input type="date" id="attendanceDatePicker" value="${today}" class="px-3 py-2 rounded-xl border border-slate-200 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+        <div class="grid lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-2 space-y-8">
+                <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+                    <div class="p-6 border-b border-slate-50">
+                        <h3 class="font-bold text-slate-900 mb-4">Mark Attendance</h3>
+                        <div class="grid md:grid-cols-3 gap-4">
+                            <div class="flex flex-col gap-1">
+                                <label class="text-xs font-bold text-slate-500">Select Date:</label>
+                                <input type="date" id="attendanceDatePicker" value="${today}" class="px-3 py-2 rounded-xl border border-slate-200 text-sm outline-none focus:ring-2 focus:ring-indigo-500 w-full">
+                            </div>
+                            <div class="flex flex-col gap-1">
+                                <label class="text-xs font-bold text-slate-500">Select Subject:</label>
+                                <select id="attendanceSubjectPicker" class="px-3 py-2 rounded-xl border border-slate-200 text-sm outline-none focus:ring-2 focus:ring-indigo-500 w-full">
+                                    <option value="Mathematics">Mathematics</option>
+                                    <option value="Physics">Physics</option>
+                                    <option value="Chemistry">Chemistry</option>
+                                    <option value="English">English</option>
+                                    <option value="History">History</option>
+                                </select>
+                            </div>
+                            <div class="flex flex-col gap-1">
+                                <label class="text-xs font-bold text-slate-500">Select Time:</label>
+                                <select id="attendanceTimePicker" class="px-3 py-2 rounded-xl border border-slate-200 text-sm outline-none focus:ring-2 focus:ring-indigo-500 w-full">
+                                    <option value="09:00 AM">09:00 AM</option>
+                                    <option value="10:30 AM">10:30 AM</option>
+                                    <option value="12:00 PM">12:00 PM</option>
+                                    <option value="01:30 PM">01:30 PM</option>
+                                    <option value="03:00 PM">03:00 PM</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <div id="attendanceList" class="grid gap-4">
+                            <div class="text-center py-12 text-slate-400">Loading students...</div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="p-6">
-                <div id="attendanceList" class="grid gap-4">
-                    <!-- Loaded dynamically -->
-                    <div class="text-center py-12 text-slate-400">Loading students...</div>
+            
+            <div class="space-y-8">
+                <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
+                    <h4 class="font-bold text-slate-900 mb-4">Recent Attendance Logs</h4>
+                    <div id="recentAttendanceLogs">
+                        <div class="text-center py-8 text-slate-400 text-sm">Loading logs...</div>
+                    </div>
                 </div>
-                <button onclick="alert('Attendance for ' + document.getElementById('attendanceDatePicker').value + ' has been finalized.')" class="mt-8 w-full bg-indigo-600 text-white py-4 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg">
-                    Finalize Attendance
-                </button>
+                
+                <div class="bg-indigo-600 rounded-3xl p-6 text-white shadow-lg shadow-indigo-200">
+                    <h4 class="font-bold mb-2">Quick Tip</h4>
+                    <p class="text-indigo-100 text-sm">You can mark attendance for future dates to schedule classes in advance.</p>
+                </div>
             </div>
         </div>
     `;
 
     const datePicker = document.getElementById('attendanceDatePicker') as HTMLInputElement;
-    datePicker.addEventListener('change', (e) => {
-        selectedDate = (e.target as HTMLInputElement).value;
-        loadAttendance(selectedDate);
-    });
+    const subjectPicker = document.getElementById('attendanceSubjectPicker') as HTMLSelectElement;
+    const timePicker = document.getElementById('attendanceTimePicker') as HTMLSelectElement;
 
-    loadAttendance(selectedDate);
+    const updateView = () => {
+        selectedDate = datePicker.value;
+        selectedSubject = subjectPicker.value;
+        selectedTime = timePicker.value;
+        loadAttendance(selectedDate, selectedSubject);
+        loadRecentLogs();
+    };
+
+    datePicker.addEventListener('change', updateView);
+    subjectPicker.addEventListener('change', updateView);
+    timePicker.addEventListener('change', updateView);
+
+    loadAttendance(selectedDate, selectedSubject);
+    loadRecentLogs();
 }
 
-(window as any).markAttendance = async (studentId: string, status: string, date: string) => {
+(window as any).markAttendance = async (studentId: string, status: string, date: string, subject: string, time: string) => {
     try {
         await fetch('/api/attendance', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ studentId, status, date })
+            body: JSON.stringify({ studentId, status, date, subject, time })
         });
         // Refresh the list
         const datePicker = document.getElementById('attendanceDatePicker') as HTMLInputElement;
-        if (datePicker) {
+        const subjectPicker = document.getElementById('attendanceSubjectPicker') as HTMLSelectElement;
+        if (datePicker && subjectPicker) {
             const currentFunc = (window as any).refreshAttendance;
-            if (typeof currentFunc === 'function') currentFunc(datePicker.value);
+            if (typeof currentFunc === 'function') currentFunc(datePicker.value, subjectPicker.value);
         }
     } catch (err) {
         console.error('Mark attendance error:', err);
@@ -851,15 +942,18 @@ async function renderAttendanceModule() {
 };
 
 // Helper to refresh attendance list without full re-render
-(window as any).refreshAttendance = async (date: string) => {
+(window as any).refreshAttendance = async (date: string, subject: string) => {
     const studentsRes = await fetch('/api/students');
-    const attendanceRes = await fetch(`/api/attendance?date=${date}`);
+    const attendanceRes = await fetch(`/api/attendance?date=${date}&subject=${subject}`);
     const students = await studentsRes.json();
     const attendance = await attendanceRes.json();
     const attendanceMap = new Map(attendance.map((a: any) => [a.studentId, a.status]));
 
     const listContainer = document.getElementById('attendanceList');
     if (listContainer) {
+        const timePicker = document.getElementById('attendanceTimePicker') as HTMLSelectElement;
+        const selectedTime = timePicker?.value || '09:00 AM';
+
         listContainer.innerHTML = students.map((s: any) => {
             const status = attendanceMap.get(s.id) || 'Not Marked';
             return `
@@ -873,8 +967,8 @@ async function renderAttendanceModule() {
                             ${status}
                         </span>
                         <div class="flex gap-2">
-                            <button onclick="window.markAttendance('${s.id}', 'Present', '${date}')" class="px-3 py-1 bg-emerald-600 text-white rounded-lg text-[10px] font-bold hover:bg-emerald-700 transition-all">P</button>
-                            <button onclick="window.markAttendance('${s.id}', 'Absent', '${date}')" class="px-3 py-1 bg-rose-600 text-white rounded-lg text-[10px] font-bold hover:bg-rose-700 transition-all">A</button>
+                            <button onclick="window.markAttendance('${s.id}', 'Present', '${date}', '${subject}', '${selectedTime}')" class="px-3 py-1 bg-emerald-600 text-white rounded-lg text-[10px] font-bold hover:bg-emerald-700 transition-all">P</button>
+                            <button onclick="window.markAttendance('${s.id}', 'Absent', '${date}', '${subject}', '${selectedTime}')" class="px-3 py-1 bg-rose-600 text-white rounded-lg text-[10px] font-bold hover:bg-rose-700 transition-all">A</button>
                         </div>
                     </div>
                 </div>
@@ -966,15 +1060,31 @@ async function renderStudentAttendance() {
                     <h3 class="font-bold text-slate-900">My Attendance History</h3>
                 </div>
                 <div class="p-6">
-                    <div class="grid gap-4">
-                        ${attendance.length > 0 ? attendance.map((a: any) => `
-                            <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                                <div class="text-sm font-medium text-slate-700">${a.date}</div>
-                                <span class="text-[10px] font-bold uppercase px-2 py-1 rounded-lg ${a.status === 'Present' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">
-                                    ${a.status}
-                                </span>
-                            </div>
-                        `).join('') : '<div class="text-center py-12 text-slate-400">No attendance records found.</div>'}
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
+                                <tr>
+                                    <th class="px-6 py-4 font-semibold">Date</th>
+                                    <th class="px-6 py-4 font-semibold">Subject</th>
+                                    <th class="px-6 py-4 font-semibold">Time</th>
+                                    <th class="px-6 py-4 font-semibold">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-50">
+                                ${attendance.length > 0 ? attendance.map((a: any) => `
+                                    <tr class="hover:bg-slate-50 transition-colors">
+                                        <td class="px-6 py-4 text-sm text-slate-700">${a.date}</td>
+                                        <td class="px-6 py-4 text-sm text-slate-700 font-medium">${a.subject || 'General'}</td>
+                                        <td class="px-6 py-4 text-sm text-slate-500">${a.time || 'N/A'}</td>
+                                        <td class="px-6 py-4 text-sm">
+                                            <span class="text-[10px] font-bold uppercase px-2 py-1 rounded-lg ${a.status === 'Present' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">
+                                                ${a.status}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                `).join('') : '<tr><td colspan="4" class="text-center py-12 text-slate-400">No attendance records found.</td></tr>'}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
