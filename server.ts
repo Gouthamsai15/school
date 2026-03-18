@@ -40,6 +40,25 @@ async function startServer() {
     tasks: [
       { id: "1", staffId: "2", title: "Clean Lab", description: "Deep clean the chemistry lab", dueDate: "2026-03-20", status: "Pending" },
       { id: "2", staffId: "2", title: "Inventory Check", description: "Check office supplies", dueDate: "2026-03-22", status: "Completed" }
+    ],
+    timetable: [
+      { id: "1", classId: "10th-A", subject: "Mathematics", teacherId: "1", day: "Monday", startTime: "09:00", endTime: "10:00" },
+      { id: "2", classId: "10th-A", subject: "Physics", teacherId: "1", day: "Monday", startTime: "10:00", endTime: "11:00" },
+      { id: "3", classId: "9th-B", subject: "English", teacherId: "1", day: "Tuesday", startTime: "09:00", endTime: "10:00" }
+    ],
+    classes: [
+      { id: "1", name: "10th", section: "A" },
+      { id: "2", name: "9th", section: "B" }
+    ],
+    subjects: [
+      { id: "1", name: "Mathematics" },
+      { id: "2", name: "Physics" },
+      { id: "3", name: "English" }
+    ],
+    classSubjects: [
+      { id: "1", classId: "1", subjectId: "1", teacherId: "1" },
+      { id: "2", classId: "1", subjectId: "2", teacherId: "1" },
+      { id: "3", classId: "2", subjectId: "3", teacherId: "1" }
     ]
   };
 
@@ -51,7 +70,7 @@ async function startServer() {
     if (username === "admin" && password === "admin" && role === "Admin") {
       res.json({ success: true, user: { username, role } });
     } else if (username === "teacher" && password === "teacher" && role === "Teaching Staff") {
-      res.json({ success: true, user: { username, role } });
+      res.json({ success: true, user: { username, role, staffId: "1" } });
     } else if (username === "student1" && password === "student1" && role === "Student") {
       res.json({ success: true, user: { username, role, studentId: "1" } });
     } else if (username === "parent1" && password === "parent1" && role === "Parent") {
@@ -301,6 +320,161 @@ async function startServer() {
 
   app.post("/api/attendance/mark", checkRole(['Admin', 'Teaching Staff']), (req, res) => {
     res.json({ success: true, message: "Attendance marked successfully" });
+  });
+
+  // Timetable API
+  app.get("/api/timetable", (req, res) => {
+    const { classId, teacherId } = req.query;
+    let results = db.timetable;
+    if (classId) results = results.filter(t => t.classId === classId);
+    if (teacherId) results = results.filter(t => t.teacherId === teacherId);
+    res.json(results);
+  });
+
+  app.post("/api/timetable", (req, res) => {
+    const { classId, subject, teacherId, day, startTime, endTime } = req.body;
+
+    // Helper to check overlap
+    const isOverlapping = (start1: string, end1: string, start2: string, end2: string) => {
+      return (start1 < end2 && end1 > start2);
+    };
+
+    // Check class overlap
+    const classConflict = db.timetable.find(t => 
+      t.classId === classId && t.day === day && isOverlapping(startTime, endTime, t.startTime, t.endTime)
+    );
+    if (classConflict) {
+      return res.status(400).json({ success: false, message: `Class ${classId} already has ${classConflict.subject} at this time.` });
+    }
+
+    // Check teacher overlap
+    const teacherConflict = db.timetable.find(t => 
+      t.teacherId === teacherId && t.day === day && isOverlapping(startTime, endTime, t.startTime, t.endTime)
+    );
+    if (teacherConflict) {
+      return res.status(400).json({ success: false, message: `Teacher is already busy with Class ${teacherConflict.classId} at this time.` });
+    }
+
+    const newEntry = { id: Date.now().toString(), ...req.body };
+    db.timetable.push(newEntry);
+    res.json({ success: true, entry: newEntry });
+  });
+
+  app.put("/api/timetable/:id", (req, res) => {
+    const { classId, subject, teacherId, day, startTime, endTime } = req.body;
+    const index = db.timetable.findIndex(t => t.id === req.params.id);
+    if (index === -1) return res.status(404).json({ success: false });
+
+    // Helper to check overlap
+    const isOverlapping = (start1: string, end1: string, start2: string, end2: string) => {
+      return (start1 < end2 && end1 > start2);
+    };
+
+    // Check class overlap (excluding current entry)
+    const classConflict = db.timetable.find(t => 
+      t.id !== req.params.id && t.classId === classId && t.day === day && isOverlapping(startTime, endTime, t.startTime, t.endTime)
+    );
+    if (classConflict) {
+      return res.status(400).json({ success: false, message: `Class ${classId} already has ${classConflict.subject} at this time.` });
+    }
+
+    // Check teacher overlap (excluding current entry)
+    const teacherConflict = db.timetable.find(t => 
+      t.id !== req.params.id && t.teacherId === teacherId && t.day === day && isOverlapping(startTime, endTime, t.startTime, t.endTime)
+    );
+    if (teacherConflict) {
+      return res.status(400).json({ success: false, message: `Teacher is already busy with Class ${teacherConflict.classId} at this time.` });
+    }
+
+    db.timetable[index] = { ...db.timetable[index], ...req.body };
+    res.json({ success: true, entry: db.timetable[index] });
+  });
+
+  app.delete("/api/timetable/:id", (req, res) => {
+    const index = db.timetable.findIndex(t => t.id === req.params.id);
+    if (index !== -1) {
+      db.timetable.splice(index, 1);
+      res.json({ success: true });
+    } else res.status(404).json({ success: false });
+  });
+
+  // Classes API
+  app.get("/api/classes", (req, res) => res.json(db.classes));
+  app.post("/api/classes", (req, res) => {
+    const newClass = { id: Date.now().toString(), ...req.body };
+    db.classes.push(newClass);
+    res.json({ success: true, class: newClass });
+  });
+  app.put("/api/classes/:id", (req, res) => {
+    const index = db.classes.findIndex(c => c.id === req.params.id);
+    if (index !== -1) {
+      db.classes[index] = { ...db.classes[index], ...req.body };
+      res.json({ success: true });
+    } else res.status(404).json({ success: false });
+  });
+  app.delete("/api/classes/:id", (req, res) => {
+    const index = db.classes.findIndex(c => c.id === req.params.id);
+    if (index !== -1) {
+      db.classes.splice(index, 1);
+      res.json({ success: true });
+    } else res.status(404).json({ success: false });
+  });
+
+  // Subjects API
+  app.get("/api/subjects", (req, res) => res.json(db.subjects));
+  app.post("/api/subjects", (req, res) => {
+    const newSubject = { id: Date.now().toString(), ...req.body };
+    db.subjects.push(newSubject);
+    res.json({ success: true, subject: newSubject });
+  });
+  app.put("/api/subjects/:id", (req, res) => {
+    const index = db.subjects.findIndex(s => s.id === req.params.id);
+    if (index !== -1) {
+      db.subjects[index] = { ...db.subjects[index], ...req.body };
+      res.json({ success: true });
+    } else res.status(404).json({ success: false });
+  });
+  app.delete("/api/subjects/:id", (req, res) => {
+    const index = db.subjects.findIndex(s => s.id === req.params.id);
+    if (index !== -1) {
+      db.subjects.splice(index, 1);
+      res.json({ success: true });
+    } else res.status(404).json({ success: false });
+  });
+
+  // Class-Subjects Mapping API
+  app.get("/api/class-subjects", (req, res) => {
+    const { classId, teacherId } = req.query;
+    let filtered = db.classSubjects;
+    if (classId) filtered = filtered.filter(cs => cs.classId === classId);
+    if (teacherId) filtered = filtered.filter(cs => cs.teacherId === teacherId);
+    res.json(filtered);
+  });
+  app.post("/api/class-subjects", (req, res) => {
+    const { classId, subjectId, teacherId } = req.body;
+    
+    // Rule: Teacher must exist
+    const teacherExists = db.staff.some(s => s.id === teacherId);
+    if (!teacherExists) {
+      return res.status(400).json({ success: false, message: "Teacher does not exist" });
+    }
+
+    // Rule: No duplicate mappings
+    const duplicate = db.classSubjects.some(cs => cs.classId === classId && cs.subjectId === subjectId);
+    if (duplicate) {
+      return res.status(400).json({ success: false, message: "This subject is already mapped to this class" });
+    }
+
+    const newMapping = { id: Date.now().toString(), classId, subjectId, teacherId };
+    db.classSubjects.push(newMapping);
+    res.json({ success: true, mapping: newMapping });
+  });
+  app.delete("/api/class-subjects/:id", (req, res) => {
+    const index = db.classSubjects.findIndex(cs => cs.id === req.params.id);
+    if (index !== -1) {
+      db.classSubjects.splice(index, 1);
+      res.json({ success: true });
+    } else res.status(404).json({ success: false });
   });
 
   // Vite middleware for development

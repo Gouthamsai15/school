@@ -13,6 +13,10 @@ const ROLE_SIDEBAR_CONFIG: Record<string, SidebarItem[]> = {
         { label: 'Dashboard', icon: 'LayoutDashboard', id: 'dashboard' },
         { label: 'Students', icon: 'Users', id: 'students' },
         { label: 'Staff', icon: 'UserSquare2', id: 'staff' },
+        { label: 'Classes', icon: 'School', id: 'classes' },
+        { label: 'Subjects', icon: 'BookOpen', id: 'subjects' },
+        { label: 'Academic Mapping', icon: 'GitMerge', id: 'academic-mapping' },
+        { label: 'Timetable', icon: 'Calendar', id: 'timetable' },
         { label: 'HR', icon: 'Briefcase', id: 'hr' },
         { label: 'Accounts', icon: 'Wallet', id: 'accounts' },
         { label: 'Transport', icon: 'Bus', id: 'transport' },
@@ -20,7 +24,9 @@ const ROLE_SIDEBAR_CONFIG: Record<string, SidebarItem[]> = {
     ],
     'Teaching Staff': [
         { label: 'Dashboard', icon: 'LayoutDashboard', id: 'dashboard' },
+        { label: 'Assigned Academic', icon: 'BookOpen', id: 'assigned-academic' },
         { label: 'Students', icon: 'Users', id: 'students' },
+        { label: 'Timetable', icon: 'Calendar', id: 'timetable' },
         { label: 'Attendance', icon: 'CalendarCheck', id: 'attendance' },
         { label: 'Exams', icon: 'FileText', id: 'exams' },
     ],
@@ -31,6 +37,8 @@ const ROLE_SIDEBAR_CONFIG: Record<string, SidebarItem[]> = {
     ],
     'Student': [
         { label: 'Dashboard', icon: 'LayoutDashboard', id: 'dashboard' },
+        { label: 'My Subjects', icon: 'BookOpen', id: 'my-subjects' },
+        { label: 'Timetable', icon: 'Calendar', id: 'timetable' },
         { label: 'Attendance', icon: 'CalendarCheck', id: 'attendance' },
         { label: 'Results', icon: 'GraduationCap', id: 'results' },
         { label: 'Fees', icon: 'CreditCard', id: 'fees' },
@@ -38,6 +46,8 @@ const ROLE_SIDEBAR_CONFIG: Record<string, SidebarItem[]> = {
     'Parent': [
         { label: 'Dashboard', icon: 'LayoutDashboard', id: 'dashboard' },
         { label: 'Child Info', icon: 'Baby', id: 'child-info' },
+        { label: 'Academic Info', icon: 'BookOpen', id: 'academic-info' },
+        { label: 'Timetable', icon: 'Calendar', id: 'timetable' },
         { label: 'Attendance', icon: 'CalendarCheck', id: 'attendance' },
         { label: 'Results', icon: 'GraduationCap', id: 'results' },
     ],
@@ -82,6 +92,10 @@ function getIcon(name: string) {
         'CreditCard': '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>',
         'Baby': '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>',
         'CalendarOff': '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>',
+        'Calendar': '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>',
+        'School': '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>',
+        'BookOpen': '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>',
+        'GitMerge': '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 18V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2zM9 9l3 3-3 3"></path></svg>',
         'Banknote': '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>',
         'Map': '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg>',
     };
@@ -137,6 +151,20 @@ function renderContent(role: string, pageId: string = 'dashboard', pageLabel: st
         else renderAttendanceModule();
     } else if (pageId === 'exams') {
         renderExamsModule();
+    } else if (pageId === 'classes') {
+        renderClassesModule();
+    } else if (pageId === 'subjects') {
+        renderSubjectsModule();
+    } else if (pageId === 'academic-mapping') {
+        renderAcademicMappingModule();
+    } else if (pageId === 'assigned-academic') {
+        renderAssignedAcademicModule();
+    } else if (pageId === 'my-subjects') {
+        renderMySubjectsModule();
+    } else if (pageId === 'academic-info') {
+        renderAcademicInfoModule();
+    } else if (pageId === 'timetable') {
+        renderTimetableModule(role);
     } else if (pageId === 'results') {
         if (role === 'Student') renderStudentResults();
         else if (role === 'Parent') renderParentResults();
@@ -1279,6 +1307,548 @@ async function renderExamsModule() {
         alert(`Marks saved for student ${studentId}`);
     } catch (err) {
         console.error('Save marks error:', err);
+    }
+};
+
+async function renderClassesModule() {
+    const dashboardContent = document.getElementById('dashboardContent');
+    if (!dashboardContent) return;
+
+    try {
+        const res = await fetch('/api/classes');
+        const classes = await res.json();
+
+        dashboardContent.innerHTML = `
+            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="font-bold text-slate-900">Manage Classes</h3>
+                    <button onclick="window.addClass()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all">
+                        Add Class
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="border-b border-slate-100">
+                                <th class="pb-4 font-bold text-slate-400 text-xs uppercase tracking-wider">ID</th>
+                                <th class="pb-4 font-bold text-slate-400 text-xs uppercase tracking-wider">Name</th>
+                                <th class="pb-4 font-bold text-slate-400 text-xs uppercase tracking-wider">Section</th>
+                                <th class="pb-4 font-bold text-slate-400 text-xs uppercase tracking-wider text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-50">
+                            ${classes.map((c: any) => `
+                                <tr>
+                                    <td class="py-4 text-sm text-slate-600">${c.id}</td>
+                                    <td class="py-4 text-sm font-bold text-slate-900">${c.name}</td>
+                                    <td class="py-4 text-sm text-slate-600">${c.section}</td>
+                                    <td class="py-4 text-right">
+                                        <button onclick="window.editClass('${c.id}')" class="text-indigo-600 hover:text-indigo-900 mr-3">Edit</button>
+                                        <button onclick="window.deleteClass('${c.id}')" class="text-rose-600 hover:text-rose-900">Delete</button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+    } catch (err) {
+        console.error('Error rendering classes:', err);
+    }
+}
+
+(window as any).addClass = async () => {
+    const name = prompt("Enter Class Name (e.g., 10th):");
+    const section = prompt("Enter Section (e.g., A):");
+    if (!name || !section) return;
+
+    try {
+        await fetch('/api/classes', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, section })
+        });
+        renderClassesModule();
+    } catch (err) {
+        console.error('Error adding class:', err);
+    }
+};
+
+(window as any).editClass = async (id: string) => {
+    const name = prompt("Enter New Class Name:");
+    const section = prompt("Enter New Section:");
+    if (!name || !section) return;
+
+    try {
+        await fetch(`/api/classes/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, section })
+        });
+        renderClassesModule();
+    } catch (err) {
+        console.error('Error editing class:', err);
+    }
+};
+
+(window as any).deleteClass = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this class?")) return;
+    try {
+        await fetch(`/api/classes/${id}`, { method: 'DELETE' });
+        renderClassesModule();
+    } catch (err) {
+        console.error('Error deleting class:', err);
+    }
+};
+
+async function renderSubjectsModule() {
+    const dashboardContent = document.getElementById('dashboardContent');
+    if (!dashboardContent) return;
+
+    try {
+        const res = await fetch('/api/subjects');
+        const subjects = await res.json();
+
+        dashboardContent.innerHTML = `
+            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="font-bold text-slate-900">Manage Subjects</h3>
+                    <button onclick="window.addSubject()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all">
+                        Add Subject
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="border-b border-slate-100">
+                                <th class="pb-4 font-bold text-slate-400 text-xs uppercase tracking-wider">ID</th>
+                                <th class="pb-4 font-bold text-slate-400 text-xs uppercase tracking-wider">Name</th>
+                                <th class="pb-4 font-bold text-slate-400 text-xs uppercase tracking-wider text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-50">
+                            ${subjects.map((s: any) => `
+                                <tr>
+                                    <td class="py-4 text-sm text-slate-600">${s.id}</td>
+                                    <td class="py-4 text-sm font-bold text-slate-900">${s.name}</td>
+                                    <td class="py-4 text-right">
+                                        <button onclick="window.editSubject('${s.id}')" class="text-indigo-600 hover:text-indigo-900 mr-3">Edit</button>
+                                        <button onclick="window.deleteSubject('${s.id}')" class="text-rose-600 hover:text-rose-900">Delete</button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+    } catch (err) {
+        console.error('Error rendering subjects:', err);
+    }
+}
+
+(window as any).addSubject = async () => {
+    const name = prompt("Enter Subject Name:");
+    if (!name) return;
+
+    try {
+        await fetch('/api/subjects', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name })
+        });
+        renderSubjectsModule();
+    } catch (err) {
+        console.error('Error adding subject:', err);
+    }
+};
+
+(window as any).editSubject = async (id: string) => {
+    const name = prompt("Enter New Subject Name:");
+    if (!name) return;
+
+    try {
+        await fetch(`/api/subjects/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name })
+        });
+        renderSubjectsModule();
+    } catch (err) {
+        console.error('Error editing subject:', err);
+    }
+};
+
+(window as any).deleteSubject = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this subject?")) return;
+    try {
+        await fetch(`/api/subjects/${id}`, { method: 'DELETE' });
+        renderSubjectsModule();
+    } catch (err) {
+        console.error('Error deleting subject:', err);
+    }
+};
+
+async function renderAcademicMappingModule() {
+    const dashboardContent = document.getElementById('dashboardContent');
+    if (!dashboardContent) return;
+
+    try {
+        const [classesRes, subjectsRes, staffRes, mappingRes] = await Promise.all([
+            fetch('/api/classes'),
+            fetch('/api/subjects'),
+            fetch('/api/staff'),
+            fetch('/api/class-subjects')
+        ]);
+
+        const classes = await classesRes.json();
+        const subjects = await subjectsRes.json();
+        const staff = await staffRes.json();
+        const mappings = await mappingRes.json();
+
+        const classMap = new Map(classes.map((c: any) => [c.id, `${c.name} ${c.section}`]));
+        const subjectMap = new Map(subjects.map((s: any) => [s.id, s.name]));
+        const staffMap = new Map(staff.map((s: any) => [s.id, s.name]));
+
+        dashboardContent.innerHTML = `
+            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="font-bold text-slate-900">Academic Mapping (Class-Subject-Teacher)</h3>
+                    <button onclick="window.addMapping()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all">
+                        New Mapping
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="border-b border-slate-100">
+                                <th class="pb-4 font-bold text-slate-400 text-xs uppercase tracking-wider">Class</th>
+                                <th class="pb-4 font-bold text-slate-400 text-xs uppercase tracking-wider">Subject</th>
+                                <th class="pb-4 font-bold text-slate-400 text-xs uppercase tracking-wider">Teacher</th>
+                                <th class="pb-4 font-bold text-slate-400 text-xs uppercase tracking-wider text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-50">
+                            ${mappings.map((m: any) => `
+                                <tr>
+                                    <td class="py-4 text-sm font-bold text-slate-900">${classMap.get(m.classId) || 'Unknown'}</td>
+                                    <td class="py-4 text-sm text-slate-600">${subjectMap.get(m.subjectId) || 'Unknown'}</td>
+                                    <td class="py-4 text-sm text-slate-600">${staffMap.get(m.teacherId) || 'Unknown'}</td>
+                                    <td class="py-4 text-right">
+                                        <button onclick="window.deleteMapping('${m.id}')" class="text-rose-600 hover:text-rose-900">Delete</button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+
+        (window as any).addMapping = async () => {
+            const classOptions = classes.map((c: any) => `${c.id}: ${c.name} ${c.section}`).join('\n');
+            const subjectOptions = subjects.map((s: any) => `${s.id}: ${s.name}`).join('\n');
+            const staffOptions = staff.filter((s: any) => s.role === 'Teaching Staff').map((s: any) => `${s.id}: ${s.name}`).join('\n');
+
+            const classId = prompt(`Select Class ID:\n${classOptions}`);
+            const subjectId = prompt(`Select Subject ID:\n${subjectOptions}`);
+            const teacherId = prompt(`Select Teacher ID:\n${staffOptions}`);
+
+            if (!classId || !subjectId || !teacherId) return;
+
+            try {
+                const res = await fetch('/api/class-subjects', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ classId, subjectId, teacherId })
+                });
+                const data = await res.json();
+                if (!data.success) {
+                    alert(data.message || "Failed to create mapping");
+                } else {
+                    renderAcademicMappingModule();
+                }
+            } catch (err) {
+                console.error('Error adding mapping:', err);
+            }
+        };
+
+        (window as any).deleteMapping = async (id: string) => {
+            if (!confirm("Delete this mapping?")) return;
+            try {
+                await fetch(`/api/class-subjects/${id}`, { method: 'DELETE' });
+                renderAcademicMappingModule();
+            } catch (err) {
+                console.error('Error deleting mapping:', err);
+            }
+        };
+
+    } catch (err) {
+        console.error('Error rendering mapping module:', err);
+    }
+}
+
+async function renderAssignedAcademicModule() {
+    const dashboardContent = document.getElementById('dashboardContent');
+    if (!dashboardContent) return;
+
+    const user = getCurrentUser();
+    if (!user) return;
+
+    const teacherId = (user as any).staffId || '1';
+
+    try {
+        const [classesRes, subjectsRes, mappingRes] = await Promise.all([
+            fetch('/api/classes'),
+            fetch('/api/subjects'),
+            fetch(`/api/class-subjects?teacherId=${teacherId}`)
+        ]);
+
+        const classes = await classesRes.json();
+        const subjects = await subjectsRes.json();
+        const mappings = await mappingRes.json();
+
+        const classMap = new Map(classes.map((c: any) => [c.id, `${c.name} ${c.section}`]));
+        const subjectMap = new Map(subjects.map((s: any) => [s.id, s.name]));
+
+        dashboardContent.innerHTML = `
+            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
+                <h3 class="font-bold text-slate-900 mb-6">Your Assigned Classes & Subjects</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    ${mappings.map((m: any) => `
+                        <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                            <div class="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-1">${classMap.get(m.classId)}</div>
+                            <div class="text-xl font-bold text-slate-900">${subjectMap.get(m.subjectId)}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    } catch (err) {
+        console.error('Error rendering assigned academic:', err);
+    }
+}
+
+async function renderMySubjectsModule() {
+    const dashboardContent = document.getElementById('dashboardContent');
+    if (!dashboardContent) return;
+
+    const user = getCurrentUser();
+    if (!user) return;
+
+    try {
+        const studentRes = await fetch(`/api/students?id=${user.studentId}`);
+        const studentData = await studentRes.json();
+        const student = studentData[0];
+        if (!student) return;
+
+        // Find class ID based on name/section
+        const classesRes = await fetch('/api/classes');
+        const classes = await classesRes.json();
+        const myClass = classes.find((c: any) => c.name === student.grade && c.section === student.section);
+        
+        if (!myClass) {
+            dashboardContent.innerHTML = '<p class="p-6 text-slate-500">No class mapping found for your grade/section.</p>';
+            return;
+        }
+
+        const [subjectsRes, staffRes, mappingRes] = await Promise.all([
+            fetch('/api/subjects'),
+            fetch('/api/staff'),
+            fetch(`/api/class-subjects?classId=${myClass.id}`)
+        ]);
+
+        const subjects = await subjectsRes.json();
+        const staff = await staffRes.json();
+        const mappings = await mappingRes.json();
+
+        const subjectMap = new Map(subjects.map((s: any) => [s.id, s.name]));
+        const staffMap = new Map(staff.map((s: any) => [s.id, s.name]));
+
+        dashboardContent.innerHTML = `
+            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
+                <h3 class="font-bold text-slate-900 mb-6">My Subjects & Teachers (${student.grade} ${student.section})</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    ${mappings.map((m: any) => `
+                        <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                            <div class="text-xl font-bold text-slate-900 mb-2">${subjectMap.get(m.subjectId)}</div>
+                            <div class="flex items-center gap-2 text-slate-500">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                                <span class="text-sm">${staffMap.get(m.teacherId)}</span>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    } catch (err) {
+        console.error('Error rendering my subjects:', err);
+    }
+}
+
+async function renderAcademicInfoModule() {
+    // Parent view is similar to student view
+    renderMySubjectsModule();
+}
+
+async function renderTimetableModule(role: string) {
+    const dashboardContent = document.getElementById('dashboardContent');
+    if (!dashboardContent) return;
+
+    const user = getCurrentUser();
+    if (!user) return;
+
+    try {
+        let classId = '';
+        let teacherId = '';
+
+        if (role === 'Student' || role === 'Parent') {
+            const studentId = user.studentId;
+            if (studentId) {
+                const studentRes = await fetch(`/api/students?id=${studentId}`);
+                const studentData = await studentRes.json();
+                const student = studentData[0];
+                if (student) {
+                    classId = `${student.grade}-${student.section}`;
+                }
+            }
+        } else if (role === 'Teaching Staff') {
+            // Assuming teacher has staffId in user object
+            teacherId = (user as any).staffId || '1'; // Fallback for demo
+        }
+
+        const query = classId ? `?classId=${classId}` : (teacherId ? `?teacherId=${teacherId}` : '');
+        const [timetableRes, staffRes] = await Promise.all([
+            fetch(`/api/timetable${query}`),
+            fetch('/api/staff')
+        ]);
+
+        const timetable = await timetableRes.json();
+        const staff = await staffRes.json();
+        const staffMap = new Map(staff.map((s: any) => [s.id, s.name]));
+
+        const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const timeSlots = ['09:00', '10:00', '11:00', '12:00', '01:00', '02:00', '03:00'];
+
+        dashboardContent.innerHTML = `
+            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="font-bold text-slate-900">Weekly Timetable ${classId ? `(${classId})` : ''}</h3>
+                    ${role === 'Admin' ? `
+                        <button onclick="window.addTimetableEntry()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all">
+                            Add Entry
+                        </button>
+                    ` : ''}
+                </div>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full border-collapse">
+                        <thead>
+                            <tr>
+                                <th class="p-4 border border-slate-100 bg-slate-50 text-slate-500 text-xs uppercase font-bold text-left">Time</th>
+                                ${days.map(day => `<th class="p-4 border border-slate-100 bg-slate-50 text-slate-500 text-xs uppercase font-bold text-center">${day}</th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${timeSlots.map(slot => `
+                                <tr>
+                                    <td class="p-4 border border-slate-100 text-sm font-medium text-slate-600 bg-slate-50">${slot}</td>
+                                    ${days.map(day => {
+                                        const entry = timetable.find((t: any) => t.day === day && t.startTime === slot);
+                                        return `
+                                            <td class="p-4 border border-slate-100 min-w-[150px] align-top">
+                                                ${entry ? `
+                                                    <div class="bg-indigo-50 p-3 rounded-xl border border-indigo-100 relative group">
+                                                        <div class="font-bold text-indigo-700 text-sm">${entry.subject}</div>
+                                                        <div class="text-xs text-indigo-500 mt-1">${staffMap.get(entry.teacherId) || 'Unknown'}</div>
+                                                        ${role === 'Admin' ? `
+                                                            <div class="text-[10px] text-indigo-400 mt-1">${entry.classId}</div>
+                                                            <div class="flex gap-2 mt-2">
+                                                                <button onclick="window.editTimetableEntry('${entry.id}')" class="text-indigo-600 hover:text-indigo-800 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                                                </button>
+                                                                <button onclick="window.deleteTimetableEntry('${entry.id}')" class="text-rose-400 hover:text-rose-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                                                </button>
+                                                            </div>
+                                                        ` : ''}
+                                                    </div>
+                                                ` : ''}
+                                            </td>
+                                        `;
+                                    }).join('')}
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+    } catch (err) {
+        console.error('Timetable fetch error:', err);
+    }
+}
+
+(window as any).addTimetableEntry = async () => {
+    const classId = prompt("Class ID (e.g., 10th-A):");
+    if (!classId) return;
+    const subject = prompt("Subject:");
+    const teacherId = prompt("Teacher ID:");
+    const day = prompt("Day (Monday-Saturday):");
+    const startTime = prompt("Start Time (HH:MM, e.g., 09:00):");
+    const endTime = prompt("End Time (HH:MM, e.g., 10:00):");
+
+    try {
+        const res = await fetch('/api/timetable', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ classId, subject, teacherId, day, startTime, endTime })
+        });
+        const data = await res.json();
+        if (!data.success) {
+            alert(data.message || "Failed to add entry");
+        } else {
+            renderTimetableModule('Admin');
+        }
+    } catch (err) {
+        console.error('Add timetable entry error:', err);
+    }
+};
+
+(window as any).editTimetableEntry = async (id: string) => {
+    const classId = prompt("Update Class ID (e.g., 10th-A):");
+    if (!classId) return;
+    const subject = prompt("Update Subject:");
+    const teacherId = prompt("Update Teacher ID:");
+    const day = prompt("Update Day (Monday-Saturday):");
+    const startTime = prompt("Update Start Time (HH:MM, e.g., 09:00):");
+    const endTime = prompt("Update End Time (HH:MM, e.g., 10:00):");
+
+    try {
+        const res = await fetch(`/api/timetable/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ classId, subject, teacherId, day, startTime, endTime })
+        });
+        const data = await res.json();
+        if (!data.success) {
+            alert(data.message || "Failed to update entry");
+        } else {
+            renderTimetableModule('Admin');
+        }
+    } catch (err) {
+        console.error('Edit timetable entry error:', err);
+    }
+};
+
+(window as any).deleteTimetableEntry = async (id: string) => {
+    if (!confirm("Delete this timetable entry?")) return;
+    try {
+        await fetch(`/api/timetable/${id}`, { method: 'DELETE' });
+        renderTimetableModule('Admin');
+    } catch (err) {
+        console.error('Delete timetable entry error:', err);
     }
 };
 
