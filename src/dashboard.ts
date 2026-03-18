@@ -115,10 +115,16 @@ function renderContent(role: string, pageId: string = 'dashboard', pageLabel: st
         renderDashboardStats(role);
     } else if (pageId === 'students') {
         renderStudentsModule(role);
-    } else if (pageId === 'staff') {
+    } else if (pageId === 'staff' || pageId === 'employees') {
         renderStaffModule();
     } else if (pageId === 'hr') {
         renderHRModule();
+    } else if (pageId === 'leaves') {
+        renderLeavesModule();
+    } else if (pageId === 'tasks') {
+        renderTasksModule();
+    } else if (pageId === 'reports') {
+        renderReportsModule();
     } else if (pageId === 'accounts') {
         renderAccountsModule();
     } else if (pageId === 'transport') {
@@ -166,6 +172,8 @@ async function renderDashboardStats(role: string) {
         const isTeacher = role === 'Teaching Staff';
         const isStudent = role === 'Student';
         const isParent = role === 'Parent';
+        const isHR = role === 'HR';
+        const isNonTeaching = role === 'Non-Teaching Staff';
 
         if (isStudent || isParent) {
             const studentId = user.studentId;
@@ -232,6 +240,60 @@ async function renderDashboardStats(role: string) {
                             </ul>
                         </div>
                     </div>
+                </div>
+            `;
+            return;
+        }
+
+        if (isHR) {
+            dashboardContent.innerHTML = `
+                <div class="grid md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+                        <div class="text-slate-500 text-sm font-medium mb-1">Total Employees</div>
+                        <div class="text-3xl font-bold text-slate-900">${stats.totalStaff}</div>
+                        <div class="text-emerald-500 text-xs font-medium mt-2">Active Staff</div>
+                    </div>
+                    <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+                        <div class="text-slate-500 text-sm font-medium mb-1">Pending Leaves</div>
+                        <div class="text-3xl font-bold text-slate-900">3</div>
+                        <div class="text-amber-500 text-xs font-medium mt-2">Requires attention</div>
+                    </div>
+                    <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+                        <div class="text-slate-500 text-sm font-medium mb-1">New Hires (Month)</div>
+                        <div class="text-3xl font-bold text-slate-900">2</div>
+                        <div class="text-indigo-500 text-xs font-medium mt-2">Onboarding in progress</div>
+                    </div>
+                </div>
+                <div class="bg-indigo-600 rounded-3xl p-8 text-white">
+                    <h3 class="text-2xl font-bold mb-2">Welcome to HR Portal</h3>
+                    <p class="text-indigo-100 opacity-90">Manage employee records, track leave requests, and oversee staff performance from this central dashboard.</p>
+                </div>
+            `;
+            return;
+        }
+
+        if (isNonTeaching) {
+            dashboardContent.innerHTML = `
+                <div class="grid md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+                        <div class="text-slate-500 text-sm font-medium mb-1">My Pending Tasks</div>
+                        <div class="text-3xl font-bold text-slate-900">4</div>
+                        <div class="text-amber-500 text-xs font-medium mt-2">Due this week</div>
+                    </div>
+                    <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+                        <div class="text-slate-500 text-sm font-medium mb-1">Completed Tasks</div>
+                        <div class="text-3xl font-bold text-slate-900">12</div>
+                        <div class="text-emerald-500 text-xs font-medium mt-2">This month</div>
+                    </div>
+                    <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+                        <div class="text-slate-500 text-sm font-medium mb-1">Performance Score</div>
+                        <div class="text-3xl font-bold text-slate-900">95%</div>
+                        <div class="text-indigo-500 text-xs font-medium mt-2">Excellent</div>
+                    </div>
+                </div>
+                <div class="bg-slate-900 rounded-3xl p-8 text-white">
+                    <h3 class="text-2xl font-bold mb-2">Non-Teaching Staff Portal</h3>
+                    <p class="text-slate-400">Track your assigned tasks, submit reports, and manage your daily operations efficiently.</p>
                 </div>
             `;
             return;
@@ -512,6 +574,183 @@ async function renderHRModule() {
     } catch (err) {
         console.error('HR fetch error:', err);
     }
+}
+
+async function renderLeavesModule() {
+    const dashboardContent = document.getElementById('dashboardContent');
+    if (!dashboardContent) return;
+
+    try {
+        const res = await fetch('/api/leaves');
+        const leaves = await res.json();
+        const staffRes = await fetch('/api/staff');
+        const staff = await staffRes.json();
+        const staffMap = new Map(staff.map((s: any) => [s.id, s.name]));
+
+        dashboardContent.innerHTML = `
+            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+                <div class="p-6 border-b border-slate-50">
+                    <h3 class="font-bold text-slate-900">Leave Requests</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
+                            <tr>
+                                <th class="px-6 py-4 font-semibold">Employee</th>
+                                <th class="px-6 py-4 font-semibold">Duration</th>
+                                <th class="px-6 py-4 font-semibold">Reason</th>
+                                <th class="px-6 py-4 font-semibold">Status</th>
+                                <th class="px-6 py-4 font-semibold text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-50">
+                            ${leaves.map((l: any) => `
+                                <tr class="hover:bg-slate-50 transition-colors">
+                                    <td class="px-6 py-4 text-sm font-medium text-slate-900">${staffMap.get(l.staffId) || 'Unknown'}</td>
+                                    <td class="px-6 py-4 text-sm text-slate-600">${l.startDate} to ${l.endDate}</td>
+                                    <td class="px-6 py-4 text-sm text-slate-600">${l.reason}</td>
+                                    <td class="px-6 py-4 text-sm">
+                                        <span class="px-2 py-1 rounded-full text-[10px] font-bold uppercase ${
+                                            l.status === 'Approved' ? 'bg-emerald-100 text-emerald-700' : 
+                                            l.status === 'Rejected' ? 'bg-rose-100 text-rose-700' : 
+                                            'bg-amber-100 text-amber-700'
+                                        }">
+                                            ${l.status}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 text-sm text-right">
+                                        ${l.status === 'Pending' ? `
+                                            <button onclick="window.updateLeaveStatus('${l.id}', 'Approved')" class="text-emerald-600 hover:text-emerald-800 font-bold mr-3">Approve</button>
+                                            <button onclick="window.updateLeaveStatus('${l.id}', 'Rejected')" class="text-rose-600 hover:text-rose-800 font-bold">Reject</button>
+                                        ` : '<span class="text-slate-400 italic">Processed</span>'}
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+    } catch (err) {
+        console.error('Leaves fetch error:', err);
+    }
+}
+
+(window as any).updateLeaveStatus = async (id: string, status: string) => {
+    try {
+        await fetch(`/api/leaves/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status })
+        });
+        renderLeavesModule();
+    } catch (err) {
+        console.error('Update leave status error:', err);
+    }
+};
+
+async function renderTasksModule() {
+    const dashboardContent = document.getElementById('dashboardContent');
+    if (!dashboardContent) return;
+
+    const user = getCurrentUser();
+    if (!user) return;
+
+    try {
+        // If non-teaching staff, show only their tasks. If admin/HR, show all?
+        // Let's assume non-teaching staff has staffId in their user object.
+        const url = user.staffId ? `/api/tasks?staffId=${user.staffId}` : '/api/tasks';
+        const res = await fetch(url);
+        const tasks = await res.json();
+
+        dashboardContent.innerHTML = `
+            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="font-bold text-slate-900">My Tasks</h3>
+                    ${user.role === 'Admin' || user.role === 'HR' ? `
+                        <button onclick="window.addTask()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all">
+                            Assign Task
+                        </button>
+                    ` : ''}
+                </div>
+                <div class="grid gap-4">
+                    ${tasks.map((t: any) => `
+                        <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex justify-between items-start">
+                            <div>
+                                <div class="font-bold text-slate-900">${t.title}</div>
+                                <div class="text-sm text-slate-500 mb-2">${t.description}</div>
+                                <div class="text-xs text-slate-400">Due: ${t.dueDate}</div>
+                            </div>
+                            <div class="flex flex-col items-end gap-2">
+                                <span class="px-2 py-1 rounded-full text-[10px] font-bold uppercase ${t.status === 'Completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">
+                                    ${t.status}
+                                </span>
+                                ${t.status === 'Pending' ? `
+                                    <button onclick="window.updateTaskStatus('${t.id}', 'Completed')" class="text-indigo-600 text-xs font-bold hover:underline">Mark Complete</button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    } catch (err) {
+        console.error('Tasks fetch error:', err);
+    }
+}
+
+(window as any).updateTaskStatus = async (id: string, status: string) => {
+    try {
+        await fetch(`/api/tasks/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status })
+        });
+        renderTasksModule();
+    } catch (err) {
+        console.error('Update task status error:', err);
+    }
+};
+
+(window as any).addTask = async () => {
+    const title = prompt("Task Title:");
+    if (!title) return;
+    const description = prompt("Description:");
+    const staffId = prompt("Staff ID:");
+    const dueDate = prompt("Due Date (YYYY-MM-DD):");
+
+    try {
+        await fetch('/api/tasks', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title, description, staffId, dueDate })
+        });
+        renderTasksModule();
+    } catch (err) {
+        console.error('Add task error:', err);
+    }
+};
+
+async function renderReportsModule() {
+    const dashboardContent = document.getElementById('dashboardContent');
+    if (!dashboardContent) return;
+
+    dashboardContent.innerHTML = `
+        <div class="grid md:grid-cols-2 gap-8">
+            <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
+                <h3 class="text-xl font-bold text-slate-900 mb-6">Task Completion Report</h3>
+                <div class="h-64 bg-slate-50 rounded-2xl border border-dashed border-slate-200 flex items-center justify-center text-slate-400">
+                    [Chart: Task Progress]
+                </div>
+            </div>
+            <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
+                <h3 class="text-xl font-bold text-slate-900 mb-6">Staff Attendance Summary</h3>
+                <div class="h-64 bg-slate-50 rounded-2xl border border-dashed border-slate-200 flex items-center justify-center text-slate-400">
+                    [Chart: Attendance Trends]
+                </div>
+            </div>
+        </div>
+    `;
 }
 
 async function renderAccountsModule() {

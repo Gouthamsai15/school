@@ -32,7 +32,15 @@ async function startServer() {
       { id: "2", applicantName: "Bob White", grade: "5th", status: "Approved" }
     ],
     attendance: [] as any[],
-    exams: [] as any[]
+    exams: [] as any[],
+    leaves: [
+      { id: "1", staffId: "1", startDate: "2026-03-20", endDate: "2026-03-22", reason: "Personal", status: "Pending" },
+      { id: "2", staffId: "2", startDate: "2026-03-25", endDate: "2026-03-26", reason: "Sick Leave", status: "Approved" }
+    ],
+    tasks: [
+      { id: "1", staffId: "2", title: "Clean Lab", description: "Deep clean the chemistry lab", dueDate: "2026-03-20", status: "Pending" },
+      { id: "2", staffId: "2", title: "Inventory Check", description: "Check office supplies", dueDate: "2026-03-22", status: "Completed" }
+    ]
   };
 
   // API Routes
@@ -48,9 +56,10 @@ async function startServer() {
       res.json({ success: true, user: { username, role, studentId: "1" } });
     } else if (username === "parent1" && password === "parent1" && role === "Parent") {
       res.json({ success: true, user: { username, role, studentId: "1" } });
-    } else if (role !== "Admin") {
-      // Allow other roles for demo purposes if needed
+    } else if (username === "hr" && password === "hr" && role === "HR") {
       res.json({ success: true, user: { username, role } });
+    } else if (username === "staff2" && password === "staff2" && role === "Non-Teaching Staff") {
+      res.json({ success: true, user: { username, role, staffId: "2" } });
     } else {
       res.status(401).json({ success: false, message: "Invalid credentials" });
     }
@@ -149,6 +158,48 @@ async function startServer() {
     const newAdm = { id: Date.now().toString(), ...req.body };
     db.admissions.push(newAdm);
     res.json({ success: true, admission: newAdm });
+  });
+
+  // Leaves API
+  app.get("/api/leaves", (req, res) => {
+    const { staffId } = req.query;
+    if (staffId) {
+      return res.json(db.leaves.filter(l => l.staffId === staffId));
+    }
+    res.json(db.leaves);
+  });
+  app.post("/api/leaves", (req, res) => {
+    const newLeave = { id: Date.now().toString(), status: "Pending", ...req.body };
+    db.leaves.push(newLeave);
+    res.json({ success: true, leave: newLeave });
+  });
+  app.patch("/api/leaves/:id", (req, res) => {
+    const leave = db.leaves.find(l => l.id === req.params.id);
+    if (leave) {
+      Object.assign(leave, req.body);
+      res.json({ success: true, leave });
+    } else res.status(404).json({ success: false });
+  });
+
+  // Tasks API
+  app.get("/api/tasks", (req, res) => {
+    const { staffId } = req.query;
+    if (staffId) {
+      return res.json(db.tasks.filter(t => t.staffId === staffId));
+    }
+    res.json(db.tasks);
+  });
+  app.post("/api/tasks", (req, res) => {
+    const newTask = { id: Date.now().toString(), status: "Pending", ...req.body };
+    db.tasks.push(newTask);
+    res.json({ success: true, task: newTask });
+  });
+  app.patch("/api/tasks/:id", (req, res) => {
+    const task = db.tasks.find(t => t.id === req.params.id);
+    if (task) {
+      Object.assign(task, req.body);
+      res.json({ success: true, task });
+    } else res.status(404).json({ success: false });
   });
   app.put("/api/admissions/:id", (req, res) => {
     const index = db.admissions.findIndex(a => a.id === req.params.id);

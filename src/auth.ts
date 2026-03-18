@@ -2,6 +2,7 @@ export interface User {
     username: string;
     role: string;
     studentId?: string;
+    staffId?: string;
 }
 
 export function getCurrentUser(): User | null {
