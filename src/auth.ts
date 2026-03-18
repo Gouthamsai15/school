@@ -1,6 +1,7 @@
 export interface User {
     username: string;
     role: string;
+    studentId?: string;
 }
 
 export function getCurrentUser(): User | null {

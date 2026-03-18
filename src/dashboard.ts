@@ -126,9 +126,19 @@ function renderContent(role: string, pageId: string = 'dashboard', pageLabel: st
     } else if (pageId === 'admission') {
         renderAdmissionModule();
     } else if (pageId === 'attendance') {
-        renderAttendanceModule();
+        if (role === 'Student') renderStudentAttendance();
+        else if (role === 'Parent') renderParentAttendance();
+        else renderAttendanceModule();
     } else if (pageId === 'exams') {
         renderExamsModule();
+    } else if (pageId === 'results') {
+        if (role === 'Student') renderStudentResults();
+        else if (role === 'Parent') renderParentResults();
+    } else if (pageId === 'fees') {
+        if (role === 'Student') renderStudentFees();
+        else renderAccountsModule();
+    } else if (pageId === 'child-info') {
+        renderParentChildInfo();
     } else {
         dashboardContent.innerHTML = `
             <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-12 text-center">
@@ -146,11 +156,86 @@ async function renderDashboardStats(role: string) {
     const dashboardContent = document.getElementById('dashboardContent');
     if (!dashboardContent) return;
 
+    const user = getCurrentUser();
+    if (!user) return;
+
     try {
         const res = await fetch('/api/stats');
         const stats = await res.json();
 
         const isTeacher = role === 'Teaching Staff';
+        const isStudent = role === 'Student';
+        const isParent = role === 'Parent';
+
+        if (isStudent || isParent) {
+            const studentId = user.studentId;
+            const studentRes = await fetch(`/api/students?id=${studentId}`);
+            const studentData = await studentRes.json();
+            const student = studentData[0];
+
+            dashboardContent.innerHTML = `
+                <div class="grid md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+                        <div class="text-slate-500 text-sm font-medium mb-1">Attendance Rate</div>
+                        <div class="text-3xl font-bold text-slate-900">92%</div>
+                        <div class="text-emerald-500 text-xs font-medium mt-2">Good standing</div>
+                    </div>
+                    <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+                        <div class="text-slate-500 text-sm font-medium mb-1">Last Exam Grade</div>
+                        <div class="text-3xl font-bold text-slate-900">A</div>
+                        <div class="text-indigo-500 text-xs font-medium mt-2">Top 10% of class</div>
+                    </div>
+                    <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+                        <div class="text-slate-500 text-sm font-medium mb-1">Fee Status</div>
+                        <div class="text-3xl font-bold text-slate-900">Paid</div>
+                        <div class="text-emerald-500 text-xs font-medium mt-2">No dues</div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-8">
+                    <div class="flex items-center gap-6 mb-8">
+                        <div class="w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 text-2xl font-bold">
+                            ${student?.name?.charAt(0) || 'S'}
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold text-slate-900">${student?.name || 'Student'}</h3>
+                            <p class="text-slate-500">Grade: ${student?.grade || 'N/A'} | Section: ${student?.section || 'N/A'} | Roll No: ${student?.rollNo || 'N/A'}</p>
+                        </div>
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div class="p-6 bg-slate-50 rounded-2xl border border-slate-100">
+                            <h4 class="font-bold text-slate-900 mb-4">Upcoming Schedule</h4>
+                            <ul class="space-y-3">
+                                <li class="flex justify-between text-sm">
+                                    <span class="text-slate-600">Mathematics</span>
+                                    <span class="font-medium">09:00 AM</span>
+                                </li>
+                                <li class="flex justify-between text-sm">
+                                    <span class="text-slate-600">Physics</span>
+                                    <span class="font-medium">10:30 AM</span>
+                                </li>
+                                <li class="flex justify-between text-sm">
+                                    <span class="text-slate-600">English</span>
+                                    <span class="font-medium">12:00 PM</span>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="p-6 bg-slate-50 rounded-2xl border border-slate-100">
+                            <h4 class="font-bold text-slate-900 mb-4">Recent Notifications</h4>
+                            <ul class="space-y-3">
+                                <li class="text-sm text-slate-600">
+                                    <span class="font-bold text-indigo-600">•</span> Mid-term results are out.
+                                </li>
+                                <li class="text-sm text-slate-600">
+                                    <span class="font-bold text-indigo-600">•</span> School picnic scheduled for next Friday.
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `;
+            return;
+        }
 
         dashboardContent.innerHTML = `
             <div class="grid md:grid-cols-4 gap-6 mb-8">
@@ -863,6 +948,214 @@ async function renderExamsModule() {
         console.error('Save marks error:', err);
     }
 };
+
+async function renderStudentAttendance() {
+    const dashboardContent = document.getElementById('dashboardContent');
+    if (!dashboardContent) return;
+
+    const user = getCurrentUser();
+    if (!user || !user.studentId) return;
+
+    try {
+        const res = await fetch(`/api/attendance?studentId=${user.studentId}`);
+        const attendance = await res.json();
+
+        dashboardContent.innerHTML = `
+            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+                <div class="p-6 border-b border-slate-50">
+                    <h3 class="font-bold text-slate-900">My Attendance History</h3>
+                </div>
+                <div class="p-6">
+                    <div class="grid gap-4">
+                        ${attendance.length > 0 ? attendance.map((a: any) => `
+                            <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                <div class="text-sm font-medium text-slate-700">${a.date}</div>
+                                <span class="text-[10px] font-bold uppercase px-2 py-1 rounded-lg ${a.status === 'Present' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">
+                                    ${a.status}
+                                </span>
+                            </div>
+                        `).join('') : '<div class="text-center py-12 text-slate-400">No attendance records found.</div>'}
+                    </div>
+                </div>
+            </div>
+        `;
+    } catch (err) {
+        console.error('Student attendance fetch error:', err);
+    }
+}
+
+async function renderStudentResults() {
+    const dashboardContent = document.getElementById('dashboardContent');
+    if (!dashboardContent) return;
+
+    const user = getCurrentUser();
+    if (!user || !user.studentId) return;
+
+    try {
+        const res = await fetch(`/api/exams?studentId=${user.studentId}`);
+        const results = await res.json();
+
+        dashboardContent.innerHTML = `
+            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+                <div class="p-6 border-b border-slate-50">
+                    <h3 class="font-bold text-slate-900">My Exam Results</h3>
+                </div>
+                <div class="p-6">
+                    <div class="grid gap-4">
+                        ${results.length > 0 ? results.map((r: any) => `
+                            <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                <div>
+                                    <div class="text-sm font-bold text-slate-900">${r.examType}</div>
+                                    <div class="text-xs text-slate-500">Subject: General</div>
+                                </div>
+                                <div class="text-lg font-bold text-indigo-600">${r.marks}%</div>
+                            </div>
+                        `).join('') : '<div class="text-center py-12 text-slate-400">No exam results found.</div>'}
+                    </div>
+                </div>
+            </div>
+        `;
+    } catch (err) {
+        console.error('Student results fetch error:', err);
+    }
+}
+
+async function renderStudentFees() {
+    const dashboardContent = document.getElementById('dashboardContent');
+    if (!dashboardContent) return;
+
+    const user = getCurrentUser();
+    if (!user || !user.studentId) return;
+
+    try {
+        const res = await fetch(`/api/fees?studentId=${user.studentId}`);
+        const fees = await res.json();
+
+        dashboardContent.innerHTML = `
+            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+                <div class="p-6 border-b border-slate-50">
+                    <h3 class="font-bold text-slate-900">Fee Status</h3>
+                </div>
+                <div class="p-6">
+                    <div class="grid gap-4">
+                        ${fees.length > 0 ? fees.map((f: any) => `
+                            <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                <div>
+                                    <div class="text-sm font-bold text-slate-900">${f.type}</div>
+                                    <div class="text-xs text-slate-500">Due Date: ${f.dueDate}</div>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <div class="text-sm font-bold text-slate-900">₹${f.amount}</div>
+                                    <span class="text-[10px] font-bold uppercase px-2 py-1 rounded-lg ${f.status === 'Paid' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">
+                                        ${f.status}
+                                    </span>
+                                </div>
+                            </div>
+                        `).join('') : '<div class="text-center py-12 text-slate-400">No fee records found.</div>'}
+                    </div>
+                </div>
+            </div>
+        `;
+    } catch (err) {
+        console.error('Student fees fetch error:', err);
+    }
+}
+
+async function renderParentChildInfo() {
+    const dashboardContent = document.getElementById('dashboardContent');
+    if (!dashboardContent) return;
+
+    const user = getCurrentUser();
+    if (!user || !user.studentId) return;
+
+    try {
+        const res = await fetch(`/api/students?id=${user.studentId}`);
+        const studentData = await res.json();
+        const s = studentData[0];
+
+        if (!s) {
+            dashboardContent.innerHTML = '<div class="text-center py-12 text-slate-400">Child information not found.</div>';
+            return;
+        }
+
+        dashboardContent.innerHTML = `
+            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+                <div class="p-6 border-b border-slate-50">
+                    <h3 class="font-bold text-slate-900">Child Information</h3>
+                </div>
+                <div class="p-8">
+                    <div class="flex items-center gap-8 mb-12">
+                        <div class="w-32 h-32 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 text-4xl font-bold">
+                            ${s.name.charAt(0)}
+                        </div>
+                        <div>
+                            <h2 class="text-3xl font-bold text-slate-900 mb-2">${s.name}</h2>
+                            <p class="text-slate-500 text-lg">Student ID: ${s.id}</p>
+                        </div>
+                    </div>
+                    <div class="grid md:grid-cols-2 gap-12">
+                        <div class="space-y-6">
+                            <h4 class="text-sm font-bold text-slate-400 uppercase tracking-wider">Academic Details</h4>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                    <div class="text-xs text-slate-500 mb-1">Grade</div>
+                                    <div class="font-bold text-slate-900">${s.grade}</div>
+                                </div>
+                                <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                    <div class="text-xs text-slate-500 mb-1">Section</div>
+                                    <div class="font-bold text-slate-900">${s.section}</div>
+                                </div>
+                                <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                    <div class="text-xs text-slate-500 mb-1">Roll Number</div>
+                                    <div class="font-bold text-slate-900">${s.rollNo}</div>
+                                </div>
+                                <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                    <div class="text-xs text-slate-500 mb-1">Admission Date</div>
+                                    <div class="font-bold text-slate-900">2023-06-15</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="space-y-6">
+                            <h4 class="text-sm font-bold text-slate-400 uppercase tracking-wider">Contact Information</h4>
+                            <div class="space-y-4">
+                                <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                    <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-slate-400">
+                                        ${getIcon('Mail')}
+                                    </div>
+                                    <div>
+                                        <div class="text-xs text-slate-500">Parent Email</div>
+                                        <div class="font-bold text-slate-900">${user.username}@example.com</div>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                    <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-slate-400">
+                                        ${getIcon('Phone')}
+                                    </div>
+                                    <div>
+                                        <div class="text-xs text-slate-500">Emergency Contact</div>
+                                        <div class="font-bold text-slate-900">+91 98765 43210</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    } catch (err) {
+        console.error('Parent child info fetch error:', err);
+    }
+}
+
+async function renderParentAttendance() {
+    // Reuse student attendance logic but with parent context
+    renderStudentAttendance();
+}
+
+async function renderParentResults() {
+    // Reuse student results logic but with parent context
+    renderStudentResults();
+}
 
 function startDashboard() {
     console.log('Starting dashboard script');

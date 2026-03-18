@@ -44,6 +44,10 @@ async function startServer() {
       res.json({ success: true, user: { username, role } });
     } else if (username === "teacher" && password === "teacher" && role === "Teaching Staff") {
       res.json({ success: true, user: { username, role } });
+    } else if (username === "student1" && password === "student1" && role === "Student") {
+      res.json({ success: true, user: { username, role, studentId: "1" } });
+    } else if (username === "parent1" && password === "parent1" && role === "Parent") {
+      res.json({ success: true, user: { username, role, studentId: "1" } });
     } else if (role !== "Admin") {
       // Allow other roles for demo purposes if needed
       res.json({ success: true, user: { username, role } });
@@ -53,7 +57,14 @@ async function startServer() {
   });
 
   // Students API
-  app.get("/api/students", (req, res) => res.json(db.students));
+  app.get("/api/students", (req, res) => {
+    const { id } = req.query;
+    if (id) {
+      const student = db.students.find(s => s.id === id);
+      return res.json(student ? [student] : []);
+    }
+    res.json(db.students);
+  });
   app.post("/api/students", (req, res) => {
     const newStudent = { id: Date.now().toString(), ...req.body };
     db.students.push(newStudent);
@@ -97,7 +108,13 @@ async function startServer() {
   });
 
   // Fees API
-  app.get("/api/fees", (req, res) => res.json(db.fees));
+  app.get("/api/fees", (req, res) => {
+    const { studentId } = req.query;
+    if (studentId) {
+      return res.json(db.fees.filter(f => f.studentId === studentId));
+    }
+    res.json(db.fees);
+  });
   app.post("/api/fees", (req, res) => {
     const newFee = { id: Date.now().toString(), ...req.body };
     db.fees.push(newFee);
@@ -150,12 +167,15 @@ async function startServer() {
 
   // Attendance API
   app.get("/api/attendance", (req, res) => {
-    const { date } = req.query;
+    const { date, studentId } = req.query;
+    let filtered = db.attendance;
     if (date) {
-      const filtered = db.attendance.filter(a => a.date === date);
-      return res.json(filtered);
+      filtered = filtered.filter(a => a.date === date);
     }
-    res.json(db.attendance);
+    if (studentId) {
+      filtered = filtered.filter(a => a.studentId === studentId);
+    }
+    res.json(filtered);
   });
   app.post("/api/attendance", (req, res) => {
     const { studentId, status, date } = req.body;
@@ -174,7 +194,13 @@ async function startServer() {
   });
 
   // Exams API
-  app.get("/api/exams", (req, res) => res.json(db.exams));
+  app.get("/api/exams", (req, res) => {
+    const { studentId } = req.query;
+    if (studentId) {
+      return res.json(db.exams.filter(e => e.studentId === studentId));
+    }
+    res.json(db.exams);
+  });
   app.post("/api/exams", (req, res) => {
     const record = { id: Date.now().toString(), ...req.body };
     db.exams.push(record);
