@@ -21,6 +21,9 @@ const ROLE_SIDEBAR_CONFIG: Record<string, SidebarItem[]> = {
         { label: 'Accounts', icon: 'Wallet', id: 'accounts' },
         { label: 'Transport', icon: 'Bus', id: 'transport' },
         { label: 'Admission', icon: 'UserPlus', id: 'admission' },
+        { label: 'Documents', icon: 'Files', id: 'documents' },
+        { label: 'Reports', icon: 'BarChart3', id: 'reports' },
+        { label: 'Settings', icon: 'Settings', id: 'settings' },
     ],
     'Teaching Staff': [
         { label: 'Dashboard', icon: 'LayoutDashboard', id: 'dashboard' },
@@ -29,6 +32,8 @@ const ROLE_SIDEBAR_CONFIG: Record<string, SidebarItem[]> = {
         { label: 'Timetable', icon: 'Calendar', id: 'timetable' },
         { label: 'Attendance', icon: 'CalendarCheck', id: 'attendance' },
         { label: 'Exams', icon: 'FileText', id: 'exams' },
+        { label: 'Documents', icon: 'Files', id: 'documents' },
+        { label: 'Reports', icon: 'BarChart3', id: 'reports' },
     ],
     'Non-Teaching Staff': [
         { label: 'Dashboard', icon: 'LayoutDashboard', id: 'dashboard' },
@@ -42,6 +47,8 @@ const ROLE_SIDEBAR_CONFIG: Record<string, SidebarItem[]> = {
         { label: 'Attendance', icon: 'CalendarCheck', id: 'attendance' },
         { label: 'Results', icon: 'GraduationCap', id: 'results' },
         { label: 'Fees', icon: 'CreditCard', id: 'fees' },
+        { label: 'Documents', icon: 'Files', id: 'documents' },
+        { label: 'Reports', icon: 'BarChart3', id: 'reports' },
     ],
     'Parent': [
         { label: 'Dashboard', icon: 'LayoutDashboard', id: 'dashboard' },
@@ -50,11 +57,15 @@ const ROLE_SIDEBAR_CONFIG: Record<string, SidebarItem[]> = {
         { label: 'Timetable', icon: 'Calendar', id: 'timetable' },
         { label: 'Attendance', icon: 'CalendarCheck', id: 'attendance' },
         { label: 'Results', icon: 'GraduationCap', id: 'results' },
+        { label: 'Documents', icon: 'Files', id: 'documents' },
+        { label: 'Reports', icon: 'BarChart3', id: 'reports' },
     ],
     'HR': [
         { label: 'Dashboard', icon: 'LayoutDashboard', id: 'dashboard' },
         { label: 'Employees', icon: 'Users', id: 'employees' },
         { label: 'Leaves', icon: 'CalendarOff', id: 'leaves' },
+        { label: 'Documents', icon: 'Files', id: 'documents' },
+        { label: 'Reports', icon: 'BarChart3', id: 'reports' },
     ],
     'Accounts': [
         { label: 'Dashboard', icon: 'LayoutDashboard', id: 'dashboard' },
@@ -87,7 +98,7 @@ function getIcon(name: string) {
         'CalendarCheck': '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>',
         'FileText': '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>',
         'CheckSquare': '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>',
-        'BarChart3': '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>',
+        'BarChart3': '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 20V10M12 20V4M6 20v-6"></path></svg>',
         'GraduationCap': '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222"></path></svg>',
         'CreditCard': '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>',
         'Baby': '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>',
@@ -98,6 +109,8 @@ function getIcon(name: string) {
         'GitMerge': '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 18V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2zM9 9l3 3-3 3"></path></svg>',
         'Banknote': '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>',
         'Map': '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg>',
+        'Files': '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>',
+        'Settings': '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>',
     };
     return icons[name] || icons['LayoutDashboard'];
 }
@@ -137,8 +150,6 @@ function renderContent(role: string, pageId: string = 'dashboard', pageLabel: st
         renderLeavesModule();
     } else if (pageId === 'tasks') {
         renderTasksModule();
-    } else if (pageId === 'reports') {
-        renderReportsModule();
     } else if (pageId === 'accounts') {
         renderAccountsModule();
     } else if (pageId === 'transport') {
@@ -163,6 +174,12 @@ function renderContent(role: string, pageId: string = 'dashboard', pageLabel: st
         renderMySubjectsModule();
     } else if (pageId === 'academic-info') {
         renderAcademicInfoModule();
+    } else if (pageId === 'documents') {
+        renderDocumentsModule(role);
+    } else if (pageId === 'reports') {
+        renderReportsModule(role);
+    } else if (pageId === 'settings') {
+        renderSettingsModule(role);
     } else if (pageId === 'timetable') {
         renderTimetableModule(role);
     } else if (pageId === 'results') {
@@ -758,28 +775,6 @@ async function renderTasksModule() {
         console.error('Add task error:', err);
     }
 };
-
-async function renderReportsModule() {
-    const dashboardContent = document.getElementById('dashboardContent');
-    if (!dashboardContent) return;
-
-    dashboardContent.innerHTML = `
-        <div class="grid md:grid-cols-2 gap-8">
-            <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
-                <h3 class="text-xl font-bold text-slate-900 mb-6">Task Completion Report</h3>
-                <div class="h-64 bg-slate-50 rounded-2xl border border-dashed border-slate-200 flex items-center justify-center text-slate-400">
-                    [Chart: Task Progress]
-                </div>
-            </div>
-            <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
-                <h3 class="text-xl font-bold text-slate-900 mb-6">Staff Attendance Summary</h3>
-                <div class="h-64 bg-slate-50 rounded-2xl border border-dashed border-slate-200 flex items-center justify-center text-slate-400">
-                    [Chart: Attendance Trends]
-                </div>
-            </div>
-        </div>
-    `;
-}
 
 async function renderAccountsModule() {
     const dashboardContent = document.getElementById('dashboardContent');
@@ -2074,6 +2069,502 @@ async function renderParentAttendance() {
 async function renderParentResults() {
     // Reuse student results logic but with parent context
     renderStudentResults();
+}
+
+async function renderDocumentsModule(role: string) {
+    const dashboardContent = document.getElementById('dashboardContent');
+    if (!dashboardContent) return;
+
+    const user = getCurrentUser();
+    if (!user) return;
+
+    try {
+        const query = `?userId=${user.id}&userRole=${role}`;
+        const res = await fetch(`/api/documents${query}`);
+        const documents = await res.json();
+
+        dashboardContent.innerHTML = `
+            <div class="space-y-6">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-900">Document Management</h3>
+                        <p class="text-slate-500 text-sm">Manage and view your documents</p>
+                    </div>
+                    ${role !== 'Admin' ? `
+                        <button onclick="window.showUploadModal()" class="bg-indigo-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all shadow-sm flex items-center gap-2">
+                            ${getIcon('UserPlus')}
+                            Upload Document
+                        </button>
+                    ` : ''}
+                </div>
+
+                <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-100">
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">File Name</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Type</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Upload Date</th>
+                                ${role === 'Admin' || role === 'HR' ? `<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">User Role</th>` : ''}
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            ${documents.length === 0 ? `
+                                <tr>
+                                    <td colspan="5" class="px-6 py-12 text-center text-slate-400">No documents found</td>
+                                </tr>
+                            ` : documents.map((doc: any) => `
+                                <tr class="hover:bg-slate-50/50 transition-colors">
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center text-indigo-600">
+                                                ${getIcon('FileText')}
+                                            </div>
+                                            <span class="font-medium text-slate-900">${doc.fileName}</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 text-sm text-slate-600">${doc.fileType.split('/')[1].toUpperCase()}</td>
+                                    <td class="px-6 py-4 text-sm text-slate-600">${doc.uploadDate}</td>
+                                    ${role === 'Admin' || role === 'HR' ? `<td class="px-6 py-4 text-sm text-slate-600">${doc.userRole}</td>` : ''}
+                                    <td class="px-6 py-4 text-right">
+                                        <div class="flex justify-end gap-2">
+                                            <a href="${doc.filePath}" target="_blank" class="p-2 text-slate-400 hover:text-indigo-600 transition-colors">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                            </a>
+                                            <button onclick="window.deleteDocument('${doc.id}')" class="p-2 text-slate-400 hover:text-rose-600 transition-colors">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Upload Modal -->
+            <div id="uploadModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                <div class="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden">
+                    <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+                        <h3 class="text-lg font-bold text-slate-900">Upload Document</h3>
+                        <button onclick="window.closeUploadModal()" class="text-slate-400 hover:text-slate-600">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                    </div>
+                    <form id="uploadForm" class="p-6 space-y-4">
+                        <div class="space-y-2">
+                            <label class="text-sm font-bold text-slate-700">Select File (PDF, JPEG, PNG, DOCX)</label>
+                            <div class="relative group">
+                                <input type="file" id="docFile" name="file" required class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all text-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                            </div>
+                        </div>
+                        <button type="submit" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200">
+                            Upload
+                        </button>
+                    </form>
+                </div>
+            </div>
+        `;
+
+        const uploadForm = document.getElementById('uploadForm') as HTMLFormElement;
+        if (uploadForm) {
+            uploadForm.onsubmit = async (e) => {
+                e.preventDefault();
+                const formData = new FormData(uploadForm);
+                formData.append('userId', user.id);
+                formData.append('userRole', role);
+
+                try {
+                    const uploadRes = await fetch('/api/documents', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const result = await uploadRes.json();
+                    if (result.success) {
+                        (window as any).closeUploadModal();
+                        renderDocumentsModule(role);
+                    } else {
+                        alert(result.message || 'Upload failed');
+                    }
+                } catch (err) {
+                    console.error('Upload error:', err);
+                    alert('An error occurred during upload');
+                }
+            };
+        }
+
+    } catch (err) {
+        console.error('Documents fetch error:', err);
+    }
+}
+
+(window as any).showUploadModal = () => {
+    document.getElementById('uploadModal')?.classList.remove('hidden');
+};
+
+(window as any).closeUploadModal = () => {
+    document.getElementById('uploadModal')?.classList.add('hidden');
+};
+
+(window as any).deleteDocument = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this document?')) return;
+    
+    const user = getCurrentUser();
+    if (!user) return;
+
+    try {
+        const res = await fetch(`/api/documents/${id}?userId=${user.id}&userRole=${user.role}`, {
+            method: 'DELETE'
+        });
+        const result = await res.json();
+        if (result.success) {
+            renderDocumentsModule(user.role);
+        } else {
+            alert(result.message || 'Delete failed');
+        }
+    } catch (err) {
+        console.error('Delete error:', err);
+    }
+};
+
+async function renderReportsModule(role: string) {
+    const dashboardContent = document.getElementById('dashboardContent');
+    if (!dashboardContent) return;
+
+    const user = getCurrentUser();
+    if (!user) return;
+
+    try {
+        const query = `?role=${role}&userId=${user.id}${user.studentId ? `&studentId=${user.studentId}` : ''}`;
+        const res = await fetch(`/api/reports${query}`);
+        const data = await res.json();
+
+        let html = `
+            <div class="space-y-8">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h3 class="text-2xl font-bold text-slate-900">Reports & Analytics</h3>
+                        <p class="text-slate-500">Real-time insights and performance tracking</p>
+                    </div>
+                </div>
+        `;
+
+        if (role === 'Admin') {
+            html += `
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+                        <div class="text-slate-500 text-sm font-medium mb-2">Total Fees Collected</div>
+                        <div class="text-3xl font-bold text-slate-900">₹${data.fees.paid.toLocaleString()}</div>
+                        <div class="mt-4 h-2 bg-slate-100 rounded-full overflow-hidden">
+                            <div class="h-full bg-emerald-500" style="width: ${(data.fees.paid / data.fees.total * 100).toFixed(1)}%"></div>
+                        </div>
+                        <div class="mt-2 text-xs text-slate-400">Total: ₹${data.fees.total.toLocaleString()}</div>
+                    </div>
+                    <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+                        <div class="text-slate-500 text-sm font-medium mb-2">Attendance Rate</div>
+                        <div class="text-3xl font-bold text-slate-900">${data.attendance.rate}%</div>
+                        <div class="mt-4 h-2 bg-slate-100 rounded-full overflow-hidden">
+                            <div class="h-full bg-indigo-500" style="width: ${data.attendance.rate}%"></div>
+                        </div>
+                        <div class="mt-2 text-xs text-slate-400">Across all students</div>
+                    </div>
+                    <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+                        <div class="text-slate-500 text-sm font-medium mb-2">Avg. Performance</div>
+                        <div class="text-3xl font-bold text-slate-900">${data.performance.average}%</div>
+                        <div class="mt-4 h-2 bg-slate-100 rounded-full overflow-hidden">
+                            <div class="h-full bg-amber-500" style="width: ${data.performance.average}%"></div>
+                        </div>
+                        <div class="mt-2 text-xs text-slate-400">Based on recent exams</div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
+                        <h4 class="font-bold text-slate-900 mb-6">Fees Summary</h4>
+                        <div class="space-y-4">
+                            <div class="flex justify-between items-center">
+                                <span class="text-slate-600">Paid Fees</span>
+                                <span class="font-bold text-emerald-600">₹${data.fees.paid.toLocaleString()}</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-slate-600">Pending Fees</span>
+                                <span class="font-bold text-rose-500">₹${data.fees.pending.toLocaleString()}</span>
+                            </div>
+                            <div class="pt-4 border-top border-slate-100 flex justify-between items-center">
+                                <span class="font-bold text-slate-900">Total Expected</span>
+                                <span class="font-bold text-slate-900">₹${data.fees.total.toLocaleString()}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
+                        <h4 class="font-bold text-slate-900 mb-6">School Overview</h4>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                <div class="text-slate-500 text-xs mb-1 uppercase tracking-wider font-bold">Students</div>
+                                <div class="text-2xl font-bold text-slate-900">${data.studentCount}</div>
+                            </div>
+                            <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                <div class="text-slate-500 text-xs mb-1 uppercase tracking-wider font-bold">Staff</div>
+                                <div class="text-2xl font-bold text-slate-900">${data.staffCount}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else if (role === 'Teaching Staff') {
+            html += `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
+                        <div class="text-slate-500 text-sm font-medium mb-2">Class Performance</div>
+                        <div class="text-4xl font-bold text-indigo-600">${data.classPerformance}%</div>
+                        <p class="mt-4 text-slate-500 text-sm">Average marks across all assigned classes.</p>
+                    </div>
+                    <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
+                        <div class="text-slate-500 text-sm font-medium mb-2">Attendance Summary</div>
+                        <div class="text-4xl font-bold text-emerald-600">${data.attendanceSummary}%</div>
+                        <p class="mt-4 text-slate-500 text-sm">Overall attendance rate for your students.</p>
+                    </div>
+                </div>
+            `;
+        } else if (role === 'Student' || role === 'Parent') {
+            html += `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
+                        <div class="text-slate-500 text-sm font-medium mb-2">Personal Performance</div>
+                        <div class="text-4xl font-bold text-indigo-600">${data.performance}%</div>
+                        <div class="mt-6 space-y-3">
+                            ${data.results.map((res: any) => `
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-slate-600">${res.examName}</span>
+                                    <span class="font-bold text-slate-900">${res.marks}/${res.totalMarks}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
+                        <div class="text-slate-500 text-sm font-medium mb-2">Attendance Percentage</div>
+                        <div class="text-4xl font-bold text-emerald-600">${data.attendanceRate}%</div>
+                        <p class="mt-4 text-slate-500 text-sm">Your overall attendance for the current academic year.</p>
+                    </div>
+                </div>
+            `;
+        } else if (role === 'HR') {
+            html += `
+                <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
+                    <h4 class="font-bold text-slate-900 mb-6">Employee Summary</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                        <div class="p-6 bg-slate-50 rounded-2xl border border-slate-100">
+                            <div class="text-slate-500 text-xs mb-1 uppercase tracking-wider font-bold">Total Employees</div>
+                            <div class="text-3xl font-bold text-slate-900">${data.staffSummary.total}</div>
+                        </div>
+                        <div class="p-6 bg-indigo-50 rounded-2xl border border-indigo-100">
+                            <div class="text-indigo-500 text-xs mb-1 uppercase tracking-wider font-bold">Teaching Staff</div>
+                            <div class="text-3xl font-bold text-indigo-700">${data.staffSummary.teaching}</div>
+                        </div>
+                        <div class="p-6 bg-emerald-50 rounded-2xl border border-emerald-100">
+                            <div class="text-emerald-500 text-xs mb-1 uppercase tracking-wider font-bold">Non-Teaching</div>
+                            <div class="text-3xl font-bold text-emerald-700">${data.staffSummary.nonTeaching}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        html += `</div>`;
+        dashboardContent.innerHTML = html;
+
+    } catch (err) {
+        console.error('Reports fetch error:', err);
+        dashboardContent.innerHTML = `
+            <div class="bg-rose-50 text-rose-600 p-6 rounded-2xl border border-rose-100">
+                Failed to load reports. Please try again later.
+            </div>
+        `;
+    }
+}
+
+async function renderSettingsModule(role: string) {
+    const dashboardContent = document.getElementById('dashboardContent');
+    if (!dashboardContent) return;
+
+    if (role !== 'Admin') {
+        dashboardContent.innerHTML = `
+            <div class="bg-rose-50 text-rose-600 p-6 rounded-2xl border border-rose-100">
+                Access Denied. Only administrators can access settings.
+            </div>
+        `;
+        return;
+    }
+
+    dashboardContent.innerHTML = `
+        <div class="flex justify-center p-12">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+        </div>
+    `;
+
+    try {
+        const response = await fetch('/api/settings');
+        const settings = await response.json();
+
+        let html = `
+            <div class="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- General Settings -->
+                    <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
+                        <h3 class="text-lg font-bold text-slate-900 mb-6 flex items-center">
+                            <span class="p-2 bg-indigo-50 text-indigo-600 rounded-lg mr-3">
+                                ${getIcon('School')}
+                            </span>
+                            General Settings
+                        </h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">School Name</label>
+                                <input type="text" id="schoolName" value="${settings.schoolName}" class="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-slate-700 mb-1">Academic Year</label>
+                                <input type="text" id="academicYear" value="${settings.academicYear}" class="w-full px-4 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- System Settings -->
+                    <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
+                        <h3 class="text-lg font-bold text-slate-900 mb-6 flex items-center">
+                            <span class="p-2 bg-emerald-50 text-emerald-600 rounded-lg mr-3">
+                                ${getIcon('LayoutDashboard')}
+                            </span>
+                            System Configuration
+                        </h3>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl">
+                                <div>
+                                    <div class="font-medium text-slate-900">Allow Registration</div>
+                                    <div class="text-xs text-slate-500">Enable new student/staff registration</div>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="allowRegistration" ${settings.systemConfig.allowRegistration ? 'checked' : ''} class="sr-only peer">
+                                    <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                                </label>
+                            </div>
+                            <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl">
+                                <div>
+                                    <div class="font-medium text-slate-900">Maintenance Mode</div>
+                                    <div class="text-xs text-slate-500">Put the system in maintenance mode</div>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="maintenanceMode" ${settings.systemConfig.maintenanceMode ? 'checked' : ''} class="sr-only peer">
+                                    <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-rose-600"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Role Settings -->
+                <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-bold text-slate-900 flex items-center">
+                            <span class="p-2 bg-amber-50 text-amber-600 rounded-lg mr-3">
+                                ${getIcon('Users')}
+                            </span>
+                            Role Management
+                        </h3>
+                        <button onclick="window.addNewRole()" class="px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors text-sm font-medium flex items-center">
+                            ${getIcon('UserPlus')}
+                            <span class="ml-2">Add Role</span>
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" id="rolesList">
+                        ${settings.roles.map((r: string) => `
+                            <div class="p-4 border border-slate-100 rounded-2xl bg-slate-50 flex items-center justify-between group">
+                                <span class="font-medium text-slate-700">${r}</span>
+                                <button class="text-slate-400 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                </button>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <div class="flex justify-end">
+                    <button id="saveSettingsBtn" class="px-8 py-3 bg-indigo-600 text-white rounded-2xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 font-bold flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        Save All Changes
+                    </button>
+                </div>
+            </div>
+        `;
+
+        dashboardContent.innerHTML = html;
+
+        // Add event listeners
+        const saveBtn = document.getElementById('saveSettingsBtn') as HTMLButtonElement;
+        if (saveBtn) {
+            saveBtn.onclick = async () => {
+                const updatedSettings = {
+                    schoolName: (document.getElementById('schoolName') as HTMLInputElement).value,
+                    academicYear: (document.getElementById('academicYear') as HTMLInputElement).value,
+                    systemConfig: {
+                        allowRegistration: (document.getElementById('allowRegistration') as HTMLInputElement).checked,
+                        maintenanceMode: (document.getElementById('maintenanceMode') as HTMLInputElement).checked,
+                        theme: settings.systemConfig.theme
+                    },
+                    roles: settings.roles
+                };
+
+                try {
+                    saveBtn.disabled = true;
+                    saveBtn.innerHTML = `<div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div> Saving...`;
+                    
+                    const res = await fetch(`/api/settings?role=${role}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(updatedSettings)
+                    });
+                    
+                    if (res.ok) {
+                        alert('Settings updated successfully!');
+                        renderSettingsModule(role);
+                    } else {
+                        alert('Failed to update settings.');
+                    }
+                } catch (err) {
+                    console.error('Save error:', err);
+                    alert('An error occurred while saving.');
+                } finally {
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = `<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Save All Changes`;
+                }
+            };
+        }
+
+        (window as any).addNewRole = async () => {
+            const roleName = prompt('Enter new role name:');
+            if (roleName && !settings.roles.includes(roleName)) {
+                const newRoles = [...settings.roles, roleName];
+                const res = await fetch(`/api/settings?role=${role}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ roles: newRoles })
+                });
+                if (res.ok) {
+                    renderSettingsModule(role);
+                }
+            }
+        };
+
+    } catch (err) {
+        console.error('Settings fetch error:', err);
+        dashboardContent.innerHTML = `
+            <div class="bg-rose-50 text-rose-600 p-6 rounded-2xl border border-rose-100">
+                Failed to load settings. Please try again later.
+            </div>
+        `;
+    }
 }
 
 function startDashboard() {

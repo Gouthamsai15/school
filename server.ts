@@ -1,6 +1,7 @@
 import express from "express";
 import path from "path";
 import fs from "fs";
+import multer from "multer";
 import { createServer as createViteServer } from "vite";
 
 async function startServer() {
@@ -31,8 +32,18 @@ async function startServer() {
       { id: "1", applicantName: "Alice Brown", grade: "1st", status: "Pending" },
       { id: "2", applicantName: "Bob White", grade: "5th", status: "Approved" }
     ],
-    attendance: [] as any[],
-    exams: [] as any[],
+    attendance: [
+      { id: "1", studentId: "1", date: "2026-03-18", status: "Present", subject: "Math", time: "09:00" },
+      { id: "2", studentId: "1", date: "2026-03-19", status: "Present", subject: "Math", time: "09:00" },
+      { id: "3", studentId: "2", date: "2026-03-18", status: "Absent", subject: "Math", time: "09:00" },
+      { id: "4", studentId: "2", date: "2026-03-19", status: "Present", subject: "Math", time: "09:00" },
+    ],
+    exams: [
+      { id: "1", studentId: "1", subjectId: "1", marks: 85, totalMarks: 100, examName: "Midterm" },
+      { id: "2", studentId: "1", subjectId: "2", marks: 78, totalMarks: 100, examName: "Midterm" },
+      { id: "3", studentId: "2", subjectId: "1", marks: 92, totalMarks: 100, examName: "Midterm" },
+      { id: "4", studentId: "2", subjectId: "3", marks: 88, totalMarks: 100, examName: "Midterm" },
+    ],
     leaves: [
       { id: "1", staffId: "1", startDate: "2026-03-20", endDate: "2026-03-22", reason: "Personal", status: "Pending" },
       { id: "2", staffId: "2", startDate: "2026-03-25", endDate: "2026-03-26", reason: "Sick Leave", status: "Approved" }
@@ -59,7 +70,21 @@ async function startServer() {
       { id: "1", classId: "1", subjectId: "1", teacherId: "1" },
       { id: "2", classId: "1", subjectId: "2", teacherId: "1" },
       { id: "3", classId: "2", subjectId: "3", teacherId: "1" }
-    ]
+    ],
+    documents: [
+      { id: "1", userId: "1", userRole: "Student", fileName: "Report_Card.pdf", fileType: "application/pdf", uploadDate: "2026-03-10", filePath: "/uploads/1710840000000-Report_Card.pdf" },
+      { id: "2", userId: "1", userRole: "Teaching Staff", fileName: "Lesson_Plan.pdf", fileType: "application/pdf", uploadDate: "2026-03-12", filePath: "/uploads/1710840000001-Lesson_Plan.pdf" }
+    ],
+    settings: {
+      schoolName: "INDDIA International School",
+      academicYear: "2025-26",
+      roles: ["Admin", "Teaching Staff", "Non-Teaching Staff", "Student", "Parent", "HR", "Accounts", "Transport", "Admission"],
+      systemConfig: {
+        allowRegistration: true,
+        maintenanceMode: false,
+        theme: "indigo"
+      }
+    }
   };
 
   // API Routes
@@ -68,17 +93,17 @@ async function startServer() {
     console.log(`Login attempt: ${username} as ${role}`);
     // Simple mock login
     if (username === "admin" && password === "admin" && role === "Admin") {
-      res.json({ success: true, user: { username, role } });
+      res.json({ success: true, user: { id: "admin", username, role } });
     } else if (username === "teacher" && password === "teacher" && role === "Teaching Staff") {
-      res.json({ success: true, user: { username, role, staffId: "1" } });
+      res.json({ success: true, user: { id: "teacher1", username, role, staffId: "1" } });
     } else if (username === "student1" && password === "student1" && role === "Student") {
-      res.json({ success: true, user: { username, role, studentId: "1" } });
+      res.json({ success: true, user: { id: "student1", username, role, studentId: "1" } });
     } else if (username === "parent1" && password === "parent1" && role === "Parent") {
-      res.json({ success: true, user: { username, role, studentId: "1" } });
+      res.json({ success: true, user: { id: "parent1", username, role, studentId: "1" } });
     } else if (username === "hr" && password === "hr" && role === "HR") {
-      res.json({ success: true, user: { username, role } });
+      res.json({ success: true, user: { id: "hr1", username, role } });
     } else if (username === "staff2" && password === "staff2" && role === "Non-Teaching Staff") {
-      res.json({ success: true, user: { username, role, staffId: "2" } });
+      res.json({ success: true, user: { id: "staff2", username, role, staffId: "2" } });
     } else {
       res.status(401).json({ success: false, message: "Invalid credentials" });
     }
@@ -475,6 +500,156 @@ async function startServer() {
       db.classSubjects.splice(index, 1);
       res.json({ success: true });
     } else res.status(404).json({ success: false });
+  });
+
+  // Document Management API
+  const uploadDir = path.join(process.cwd(), "uploads");
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir);
+  }
+
+  const storage = multer.diskStorage({
+    destination: (req, file, cb) => cb(null, uploadDir),
+    filename: (req, file, cb) => cb(null, `${Date.now()}-${file.originalname}`)
+  });
+
+  const upload = multer({
+    storage,
+    fileFilter: (req, file, cb) => {
+      const allowedTypes = ["application/pdf", "image/jpeg", "image/png", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"];
+      if (allowedTypes.includes(file.mimetype)) {
+        cb(null, true);
+      } else {
+        cb(new Error("Invalid file type. Only PDF, JPEG, PNG, and DOCX are allowed."));
+      }
+    },
+    limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+  });
+
+  app.get("/api/documents", (req, res) => {
+    const { userId, userRole } = req.query;
+    let filtered = db.documents;
+    if (userRole === "Admin") {
+      // Admin sees all
+    } else if (userRole === "HR") {
+      // HR sees staff documents
+      filtered = filtered.filter(doc => doc.userRole === "Teaching Staff" || doc.userRole === "Non-Teaching Staff" || doc.userRole === "HR");
+    } else if (userId) {
+      // Others see their own
+      filtered = filtered.filter(doc => doc.userId === userId);
+    } else {
+      return res.status(403).json({ success: false, message: "Unauthorized" });
+    }
+    res.json(filtered);
+  });
+
+  app.post("/api/documents", upload.single("file"), (req, res) => {
+    if (!req.file) return res.status(400).json({ success: false, message: "No file uploaded" });
+    
+    const { userId, userRole } = req.body;
+    const newDoc = {
+      id: Date.now().toString(),
+      userId,
+      userRole,
+      fileName: req.file.originalname,
+      fileType: req.file.mimetype,
+      uploadDate: new Date().toISOString().split("T")[0],
+      filePath: `/uploads/${req.file.filename}`
+    };
+    db.documents.push(newDoc);
+    res.json({ success: true, document: newDoc });
+  });
+
+  app.delete("/api/documents/:id", (req, res) => {
+    const { userId, userRole } = req.query;
+    const index = db.documents.findIndex(doc => doc.id === req.params.id);
+    if (index === -1) return res.status(404).json({ success: false });
+
+    const doc = db.documents[index];
+    if (userRole === "Admin" || doc.userId === userId) {
+      // Delete file from disk
+      const filePath = path.join(process.cwd(), doc.filePath);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+      db.documents.splice(index, 1);
+      res.json({ success: true });
+    } else {
+      res.status(403).json({ success: false, message: "Unauthorized to delete this document" });
+    }
+  });
+
+  // Serve uploaded files
+  app.use("/uploads", express.static(uploadDir));
+
+  // Reports API
+  app.get("/api/reports", (req, res) => {
+    const { role, userId, studentId } = req.query;
+
+    if (role === "Admin") {
+      const totalFees = db.fees.reduce((sum, f) => sum + f.amount, 0);
+      const paidFees = db.fees.filter(f => f.status === "Paid").reduce((sum, f) => sum + f.amount, 0);
+      const pendingFees = totalFees - paidFees;
+      const attendanceRate = (db.attendance.filter(a => a.status === "Present").length / db.attendance.length) * 100 || 0;
+      const avgPerformance = db.exams.reduce((sum, e) => sum + (e.marks / e.totalMarks) * 100, 0) / db.exams.length || 0;
+
+      return res.json({
+        fees: { total: totalFees, paid: paidFees, pending: pendingFees },
+        attendance: { rate: attendanceRate.toFixed(1) },
+        performance: { average: avgPerformance.toFixed(1) },
+        studentCount: db.students.length,
+        staffCount: db.staff.length
+      });
+    }
+
+    if (role === "Teaching Staff") {
+      const classPerformance = db.exams.reduce((sum, e) => sum + (e.marks / e.totalMarks) * 100, 0) / db.exams.length || 0;
+      const attendanceSummary = (db.attendance.filter(a => a.status === "Present").length / db.attendance.length) * 100 || 0;
+
+      return res.json({
+        classPerformance: classPerformance.toFixed(1),
+        attendanceSummary: attendanceSummary.toFixed(1)
+      });
+    }
+
+    if (role === "Student" || role === "Parent") {
+      const targetStudentId = studentId || userId;
+      const studentExams = db.exams.filter(e => e.studentId === targetStudentId);
+      const studentAttendance = db.attendance.filter(a => a.studentId === targetStudentId);
+      const performance = studentExams.reduce((sum, e) => sum + (e.marks / e.totalMarks) * 100, 0) / studentExams.length || 0;
+      const attendanceRate = (studentAttendance.filter(a => a.status === "Present").length / studentAttendance.length) * 100 || 0;
+
+      return res.json({
+        performance: performance.toFixed(1),
+        attendanceRate: attendanceRate.toFixed(1),
+        results: studentExams
+      });
+    }
+
+    if (role === "HR") {
+      return res.json({
+        staffSummary: {
+          total: db.staff.length,
+          teaching: db.staff.filter(s => s.role === "Teaching Staff").length,
+          nonTeaching: db.staff.filter(s => s.role === "Non-Teaching Staff").length
+        }
+      });
+    }
+
+    res.status(403).json({ message: "Unauthorized" });
+  });
+
+  app.get("/api/settings", (req, res) => {
+    res.json(db.settings);
+  });
+
+  app.put("/api/settings", (req, res) => {
+    const { role } = req.query;
+    if (role !== "Admin") {
+      return res.status(403).json({ success: false, message: "Only Admin can modify settings" });
+    }
+    db.settings = { ...db.settings, ...req.body };
+    res.json({ success: true, settings: db.settings });
   });
 
   // Vite middleware for development
