@@ -13,11 +13,11 @@ async function startServer() {
   // In-memory Storage
   const db = {
     students: [
-      { id: "1", name: "John Doe", grade: "10th", section: "A", rollNo: "101" },
-      { id: "2", name: "Jane Smith", grade: "9th", section: "B", rollNo: "202" }
+      { id: "1", name: "John Doe", classId: "1", rollNo: "101" },
+      { id: "2", name: "Jane Smith", classId: "2", rollNo: "202" }
     ],
     staff: [
-      { id: "1", name: "Mr. Sharma", role: "Teaching Staff", subject: "Math" },
+      { id: "1", name: "Mr. Sharma", role: "Teaching Staff" },
       { id: "2", name: "Ms. Gupta", role: "Non-Teaching Staff", department: "Admin" }
     ],
     fees: [
@@ -33,16 +33,15 @@ async function startServer() {
       { id: "2", applicantName: "Bob White", grade: "5th", status: "Approved" }
     ],
     attendance: [
-      { id: "1", studentId: "1", date: "2026-03-18", status: "Present", subject: "Math", time: "09:00" },
-      { id: "2", studentId: "1", date: "2026-03-19", status: "Present", subject: "Math", time: "09:00" },
-      { id: "3", studentId: "2", date: "2026-03-18", status: "Absent", subject: "Math", time: "09:00" },
-      { id: "4", studentId: "2", date: "2026-03-19", status: "Present", subject: "Math", time: "09:00" },
+      { id: "1", studentId: "1", date: "2026-03-18", status: "Present", subjectId: "1", time: "09:00" },
+      { id: "2", studentId: "1", date: "2026-03-19", status: "Present", subjectId: "1", time: "09:00" },
+      { id: "3", studentId: "2", date: "2026-03-18", status: "Absent", subjectId: "3", time: "09:00" },
+      { id: "4", studentId: "2", date: "2026-03-19", status: "Present", subjectId: "3", time: "09:00" },
     ],
     exams: [
       { id: "1", studentId: "1", subjectId: "1", marks: 85, totalMarks: 100, examName: "Midterm" },
       { id: "2", studentId: "1", subjectId: "2", marks: 78, totalMarks: 100, examName: "Midterm" },
-      { id: "3", studentId: "2", subjectId: "1", marks: 92, totalMarks: 100, examName: "Midterm" },
-      { id: "4", studentId: "2", subjectId: "3", marks: 88, totalMarks: 100, examName: "Midterm" },
+      { id: "3", studentId: "2", subjectId: "3", marks: 92, totalMarks: 100, examName: "Midterm" },
     ],
     leaves: [
       { id: "1", staffId: "1", startDate: "2026-03-20", endDate: "2026-03-22", reason: "Personal", status: "Pending" },
@@ -53,9 +52,9 @@ async function startServer() {
       { id: "2", staffId: "2", title: "Inventory Check", description: "Check office supplies", dueDate: "2026-03-22", status: "Completed" }
     ],
     timetable: [
-      { id: "1", classId: "10th-A", subject: "Mathematics", teacherId: "1", day: "Monday", startTime: "09:00", endTime: "10:00" },
-      { id: "2", classId: "10th-A", subject: "Physics", teacherId: "1", day: "Monday", startTime: "10:00", endTime: "11:00" },
-      { id: "3", classId: "9th-B", subject: "English", teacherId: "1", day: "Tuesday", startTime: "09:00", endTime: "10:00" }
+      { id: "1", classId: "1", subjectId: "1", teacherId: "1", day: "Monday", startTime: "09:00", endTime: "10:00" },
+      { id: "2", classId: "1", subjectId: "2", teacherId: "1", day: "Monday", startTime: "10:00", endTime: "11:00" },
+      { id: "3", classId: "2", subjectId: "3", teacherId: "1", day: "Tuesday", startTime: "09:00", endTime: "10:00" }
     ],
     classes: [
       { id: "1", name: "10th", section: "A" },
@@ -109,14 +108,47 @@ async function startServer() {
     }
   });
 
+  // Pagination helper
+  const paginate = (data: any[], page: number = 1, limit: number = 10) => {
+    const total = data.length;
+    const totalPages = Math.ceil(total / limit);
+    const offset = (page - 1) * limit;
+    const paginatedData = data.slice(offset, offset + limit);
+    return {
+      data: paginatedData,
+      total,
+      page,
+      totalPages
+    };
+  };
+
   // Students API
   app.get("/api/students", (req, res) => {
-    const { id } = req.query;
+    const { id, classId, search, page, limit = 10 } = req.query;
+    let results = db.students.map(s => {
+      const cls = db.classes.find(c => c.id === s.classId);
+      return { ...s, classInfo: cls };
+    });
+
     if (id) {
-      const student = db.students.find(s => s.id === id);
-      return res.json(student ? [student] : []);
+      results = results.filter(s => s.id === id);
     }
-    res.json(db.students);
+    if (classId) {
+      results = results.filter(s => s.classId === classId);
+    }
+    if (search) {
+      const q = (search as string).toLowerCase();
+      results = results.filter(s => 
+        s.name.toLowerCase().includes(q) || 
+        (s.email && s.email.toLowerCase().includes(q)) ||
+        (s.rollNo && s.rollNo.toLowerCase().includes(q))
+      );
+    }
+    if (page) {
+      res.json(paginate(results, Number(page), Number(limit)));
+    } else {
+      res.json(results);
+    }
   });
   app.post("/api/students", (req, res) => {
     const newStudent = { id: Date.now().toString(), ...req.body };
@@ -139,7 +171,33 @@ async function startServer() {
   });
 
   // Staff API
-  app.get("/api/staff", (req, res) => res.json(db.staff));
+  app.get("/api/staff", (req, res) => {
+    const { search, role, page, limit = 10 } = req.query;
+    let results = db.staff.map(s => {
+      const assignments = db.classSubjects.filter(cs => cs.teacherId === s.id).map(cs => {
+        const cls = db.classes.find(c => c.id === cs.classId);
+        const subject = db.subjects.find(sub => sub.id === cs.subjectId);
+        return { class: cls, subject: subject };
+      });
+      return { ...s, assignments };
+    });
+
+    if (role) {
+      results = results.filter(s => s.role === role);
+    }
+    if (search) {
+      const q = (search as string).toLowerCase();
+      results = results.filter(s => 
+        s.name.toLowerCase().includes(q) || 
+        (s.email && s.email.toLowerCase().includes(q))
+      );
+    }
+    if (page) {
+      res.json(paginate(results, Number(page), Number(limit)));
+    } else {
+      res.json(results);
+    }
+  });
   app.post("/api/staff", (req, res) => {
     const newStaff = { id: Date.now().toString(), ...req.body };
     db.staff.push(newStaff);
@@ -162,11 +220,23 @@ async function startServer() {
 
   // Fees API
   app.get("/api/fees", (req, res) => {
-    const { studentId } = req.query;
+    const { studentId, search, page = 1, limit = 10 } = req.query;
+    let results = db.fees.map(f => {
+      const student = db.students.find(s => s.id === f.studentId);
+      return { ...f, studentInfo: student };
+    });
     if (studentId) {
-      return res.json(db.fees.filter(f => f.studentId === studentId));
+      results = results.filter(f => f.studentId === studentId);
     }
-    res.json(db.fees);
+    if (search) {
+      const s = String(search).toLowerCase();
+      results = results.filter(f => f.studentId.toLowerCase().includes(s) || (f.studentInfo && f.studentInfo.name.toLowerCase().includes(s)));
+    }
+    const total = results.length;
+    const p = Number(page);
+    const l = Number(limit);
+    const data = results.slice((p - 1) * l, p * l);
+    res.json({ data, total, page: p, totalPages: Math.ceil(total / l) });
   });
   app.post("/api/fees", (req, res) => {
     const newFee = { id: Date.now().toString(), ...req.body };
@@ -182,7 +252,27 @@ async function startServer() {
   });
 
   // Transport API
-  app.get("/api/transport", (req, res) => res.json(db.transport));
+  app.get("/api/transport", (req, res) => {
+    const { search, page, limit = 10 } = req.query;
+    let filtered = db.transport;
+    if (search) {
+      const s = String(search).toLowerCase();
+      filtered = filtered.filter(v => 
+        v.vehicleNo.toLowerCase().includes(s) || 
+        v.route.toLowerCase().includes(s) || 
+        v.driver.toLowerCase().includes(s)
+      );
+    }
+    if (page) {
+      const total = filtered.length;
+      const p = Number(page);
+      const l = Number(limit);
+      const data = filtered.slice((p - 1) * l, p * l);
+      res.json({ data, total, page: p, totalPages: Math.ceil(total / l) });
+    } else {
+      res.json(filtered);
+    }
+  });
   app.post("/api/transport", (req, res) => {
     const newVehicle = { id: Date.now().toString(), ...req.body };
     db.transport.push(newVehicle);
@@ -197,7 +287,23 @@ async function startServer() {
   });
 
   // Admissions API
-  app.get("/api/admissions", (req, res) => res.json(db.admissions));
+  app.get("/api/admissions", (req, res) => {
+    const { search, page, limit = 10 } = req.query;
+    let filtered = db.admissions;
+    if (search) {
+      const s = String(search).toLowerCase();
+      filtered = filtered.filter(a => a.applicantName.toLowerCase().includes(s) || a.grade.toLowerCase().includes(s));
+    }
+    if (page) {
+      const total = filtered.length;
+      const p = Number(page);
+      const l = Number(limit);
+      const data = filtered.slice((p - 1) * l, p * l);
+      res.json({ data, total, page: p, totalPages: Math.ceil(total / l) });
+    } else {
+      res.json(filtered);
+    }
+  });
   app.post("/api/admissions", (req, res) => {
     const newAdm = { id: Date.now().toString(), ...req.body };
     db.admissions.push(newAdm);
@@ -206,11 +312,27 @@ async function startServer() {
 
   // Leaves API
   app.get("/api/leaves", (req, res) => {
-    const { staffId } = req.query;
+    const { staffId, search, page, limit = 10 } = req.query;
+    let results = db.leaves.map(l => {
+      const staff = db.staff.find(s => s.id === l.staffId);
+      return { ...l, staffInfo: staff };
+    });
     if (staffId) {
-      return res.json(db.leaves.filter(l => l.staffId === staffId));
+      results = results.filter(l => l.staffId === staffId);
     }
-    res.json(db.leaves);
+    if (search) {
+      const s = String(search).toLowerCase();
+      results = results.filter(l => l.reason.toLowerCase().includes(s) || (l.staffInfo && l.staffInfo.name.toLowerCase().includes(s)));
+    }
+    if (page) {
+      const total = results.length;
+      const p = Number(page);
+      const l = Number(limit);
+      const data = results.slice((p - 1) * l, p * l);
+      res.json({ data, total, page: p, totalPages: Math.ceil(total / l) });
+    } else {
+      res.json(results);
+    }
   });
   app.post("/api/leaves", (req, res) => {
     const newLeave = { id: Date.now().toString(), status: "Pending", ...req.body };
@@ -227,11 +349,27 @@ async function startServer() {
 
   // Tasks API
   app.get("/api/tasks", (req, res) => {
-    const { staffId } = req.query;
+    const { staffId, search, page, limit = 10 } = req.query;
+    let results = db.tasks.map(t => {
+      const staff = db.staff.find(s => s.id === t.staffId);
+      return { ...t, staffInfo: staff };
+    });
     if (staffId) {
-      return res.json(db.tasks.filter(t => t.staffId === staffId));
+      results = results.filter(t => t.staffId === staffId);
     }
-    res.json(db.tasks);
+    if (search) {
+      const s = String(search).toLowerCase();
+      results = results.filter(t => t.title.toLowerCase().includes(s) || t.description.toLowerCase().includes(s) || (t.staffInfo && t.staffInfo.name.toLowerCase().includes(s)));
+    }
+    if (page) {
+      const total = results.length;
+      const p = Number(page);
+      const l = Number(limit);
+      const data = results.slice((p - 1) * l, p * l);
+      res.json({ data, total, page: p, totalPages: Math.ceil(total / l) });
+    } else {
+      res.json(results);
+    }
   });
   app.post("/api/tasks", (req, res) => {
     const newTask = { id: Date.now().toString(), status: "Pending", ...req.body };
@@ -262,28 +400,40 @@ async function startServer() {
 
   // Attendance API
   app.get("/api/attendance", (req, res) => {
-    const { date, studentId, subject } = req.query;
-    let filtered = db.attendance;
+    const { date, studentId, subjectId, page, limit = 10 } = req.query;
+    let results = db.attendance.map(a => {
+      const student = db.students.find(s => s.id === a.studentId);
+      const subject = db.subjects.find(s => s.id === a.subjectId);
+      return { 
+        ...a, 
+        studentInfo: student ? { ...student, classInfo: db.classes.find(c => c.id === student.classId) } : null,
+        subjectInfo: subject 
+      };
+    });
     if (date) {
-      filtered = filtered.filter(a => a.date === date);
+      results = results.filter(a => a.date === date);
     }
     if (studentId) {
-      filtered = filtered.filter(a => a.studentId === studentId);
+      results = results.filter(a => a.studentId === studentId);
     }
-    if (subject) {
-      filtered = filtered.filter(a => a.subject === subject);
+    if (subjectId) {
+      results = results.filter(a => a.subjectId === subjectId);
     }
-    res.json(filtered);
+    if (page) {
+      res.json(paginate(results, Number(page), Number(limit)));
+    } else {
+      res.json(results);
+    }
   });
   app.post("/api/attendance", (req, res) => {
-    const { studentId, status, date, subject, time } = req.body;
+    const { studentId, status, date, subjectId, time } = req.body;
     const targetDate = date || new Date().toISOString().split('T')[0];
     
     // Upsert logic based on student, date, and subject
     const index = db.attendance.findIndex(a => 
       a.studentId === studentId && 
       a.date === targetDate && 
-      a.subject === subject
+      a.subjectId === subjectId
     );
     
     if (index !== -1) {
@@ -296,7 +446,7 @@ async function startServer() {
         studentId, 
         status, 
         date: targetDate, 
-        subject: subject || 'General', 
+        subjectId, 
         time: time || '09:00 AM' 
       };
       db.attendance.push(record);
@@ -306,12 +456,24 @@ async function startServer() {
 
   // Exams API
   app.get("/api/exams", (req, res) => {
-    const { studentId, examName, subjectId } = req.query;
-    let results = db.exams;
+    const { studentId, examName, subjectId, page, limit = 10 } = req.query;
+    let results = db.exams.map(e => {
+      const student = db.students.find(s => s.id === e.studentId);
+      const subject = db.subjects.find(s => s.id === e.subjectId);
+      return { 
+        ...e, 
+        studentInfo: student ? { ...student, classInfo: db.classes.find(c => c.id === student.classId) } : null,
+        subjectInfo: subject 
+      };
+    });
     if (studentId) results = results.filter(e => e.studentId === studentId);
     if (examName) results = results.filter(e => e.examName === examName);
     if (subjectId) results = results.filter(e => e.subjectId === subjectId);
-    res.json(results);
+    if (page) {
+      res.json(paginate(results, Number(page), Number(limit)));
+    } else {
+      res.json(results);
+    }
   });
   app.post("/api/exams", (req, res) => {
     const { marksData } = req.body; // Expecting an array of { studentId, subjectId, marks, totalMarks, examName }
@@ -368,14 +530,19 @@ async function startServer() {
   // Timetable API
   app.get("/api/timetable", (req, res) => {
     const { classId, teacherId } = req.query;
-    let results = db.timetable;
+    let results = db.timetable.map(t => {
+      const cls = db.classes.find(c => c.id === t.classId);
+      const subject = db.subjects.find(s => s.id === t.subjectId);
+      const teacher = db.staff.find(s => s.id === t.teacherId);
+      return { ...t, classInfo: cls, subjectInfo: subject, teacherInfo: teacher };
+    });
     if (classId) results = results.filter(t => t.classId === classId);
     if (teacherId) results = results.filter(t => t.teacherId === teacherId);
     res.json(results);
   });
 
   app.post("/api/timetable", (req, res) => {
-    const { classId, subject, teacherId, day, startTime, endTime } = req.body;
+    const { classId, subjectId, teacherId, day, startTime, endTime } = req.body;
 
     if (!startTime || !endTime || startTime >= endTime) {
       return res.status(400).json({ success: false, message: "Invalid time range. Start time must be before end time." });
@@ -391,7 +558,8 @@ async function startServer() {
       t.classId === classId && t.day === day && isOverlapping(startTime, endTime, t.startTime, t.endTime)
     );
     if (classConflict) {
-      return res.status(400).json({ success: false, message: `Class ${classId} already has ${classConflict.subject} at this time.` });
+      const subject = db.subjects.find(s => s.id === classConflict.subjectId);
+      return res.status(400).json({ success: false, message: `Class already has ${subject?.name || 'another subject'} at this time.` });
     }
 
     // Check teacher overlap
@@ -399,7 +567,8 @@ async function startServer() {
       t.teacherId === teacherId && t.day === day && isOverlapping(startTime, endTime, t.startTime, t.endTime)
     );
     if (teacherConflict) {
-      return res.status(400).json({ success: false, message: `Teacher is already busy with Class ${teacherConflict.classId} at this time.` });
+      const cls = db.classes.find(c => c.id === teacherConflict.classId);
+      return res.status(400).json({ success: false, message: `Teacher is already busy with Class ${cls?.name || teacherConflict.classId} at this time.` });
     }
 
     const newEntry = { id: Date.now().toString(), ...req.body };
@@ -408,7 +577,7 @@ async function startServer() {
   });
 
   app.put("/api/timetable/:id", (req, res) => {
-    const { classId, subject, teacherId, day, startTime, endTime } = req.body;
+    const { classId, subjectId, teacherId, day, startTime, endTime } = req.body;
     const index = db.timetable.findIndex(t => t.id === req.params.id);
     if (index === -1) return res.status(404).json({ success: false });
 
@@ -426,7 +595,8 @@ async function startServer() {
       t.id !== req.params.id && t.classId === classId && t.day === day && isOverlapping(startTime, endTime, t.startTime, t.endTime)
     );
     if (classConflict) {
-      return res.status(400).json({ success: false, message: `Class ${classId} already has ${classConflict.subject} at this time.` });
+      const subject = db.subjects.find(s => s.id === classConflict.subjectId);
+      return res.status(400).json({ success: false, message: `Class already has ${subject?.name || 'another subject'} at this time.` });
     }
 
     // Check teacher overlap (excluding current entry)
@@ -434,7 +604,8 @@ async function startServer() {
       t.id !== req.params.id && t.teacherId === teacherId && t.day === day && isOverlapping(startTime, endTime, t.startTime, t.endTime)
     );
     if (teacherConflict) {
-      return res.status(400).json({ success: false, message: `Teacher is already busy with Class ${teacherConflict.classId} at this time.` });
+      const cls = db.classes.find(c => c.id === teacherConflict.classId);
+      return res.status(400).json({ success: false, message: `Teacher is already busy with Class ${cls?.name || teacherConflict.classId} at this time.` });
     }
 
     db.timetable[index] = { ...db.timetable[index], ...req.body };
@@ -496,10 +667,15 @@ async function startServer() {
   // Class-Subjects Mapping API
   app.get("/api/class-subjects", (req, res) => {
     const { classId, teacherId } = req.query;
-    let filtered = db.classSubjects;
-    if (classId) filtered = filtered.filter(cs => cs.classId === classId);
-    if (teacherId) filtered = filtered.filter(cs => cs.teacherId === teacherId);
-    res.json(filtered);
+    let results = db.classSubjects.map(cs => {
+      const cls = db.classes.find(c => c.id === cs.classId);
+      const subject = db.subjects.find(s => s.id === cs.subjectId);
+      const teacher = db.staff.find(s => s.id === cs.teacherId);
+      return { ...cs, classInfo: cls, subjectInfo: subject, teacherInfo: teacher };
+    });
+    if (classId) results = results.filter(cs => cs.classId === classId);
+    if (teacherId) results = results.filter(cs => cs.teacherId === teacherId);
+    res.json(results);
   });
   app.post("/api/class-subjects", (req, res) => {
     const { classId, subjectId, teacherId } = req.body;
@@ -553,7 +729,7 @@ async function startServer() {
   });
 
   app.get("/api/documents", (req, res) => {
-    const { userId, userRole, targetUserId, targetUserRole, studentId } = req.query;
+    const { userId, userRole, targetUserId, targetUserRole, studentId, search, page = 1, limit = 10 } = req.query;
     let filtered = db.documents;
 
     // If targetUserId is provided, filter by it (Admin/HR only or self)
@@ -563,11 +739,10 @@ async function startServer() {
         if (targetUserRole) {
           filtered = filtered.filter(d => d.userRole === targetUserRole);
         }
-        return res.json(filtered);
+      } else {
+        return res.status(403).json({ success: false, message: "Unauthorized" });
       }
-    }
-
-    if (userRole === "Admin") {
+    } else if (userRole === "Admin") {
       // Admin sees all
     } else if (userRole === "HR") {
       // HR sees staff documents
@@ -584,7 +759,13 @@ async function startServer() {
     } else {
       return res.status(403).json({ success: false, message: "Unauthorized" });
     }
-    res.json(filtered);
+
+    if (search) {
+      const q = (search as string).toLowerCase();
+      filtered = filtered.filter(d => d.name.toLowerCase().includes(q) || d.type.toLowerCase().includes(q));
+    }
+
+    res.json(paginate(filtered, Number(page), Number(limit)));
   });
 
   app.post("/api/documents", upload.single("file"), (req, res) => {

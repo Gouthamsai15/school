@@ -1,5 +1,30 @@
 import { getCurrentUser, logout } from './auth';
 
+const debounce = (func: Function, wait: number) => {
+    let timeout: any;
+    return (...args: any[]) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(null, args), wait);
+    };
+};
+
+const moduleState: Record<string, any> = {
+    students: { search: '', classId: '', page: 1, limit: 10 },
+    staff: { search: '', role: '', page: 1, limit: 10 },
+    attendance: { page: 1, limit: 10 },
+    exams: { page: 1, limit: 10 },
+    documents: { search: '', page: 1, limit: 10 },
+    results: { page: 1, limit: 10 },
+    attendance_history: { page: 1, limit: 10 },
+    admissions: { search: '', page: 1, limit: 10 },
+    leaves: { search: '', page: 1, limit: 10 },
+    tasks: { search: '', page: 1, limit: 10 },
+    fees: { search: '', page: 1, limit: 10 },
+    transport: { search: '', page: 1, limit: 10 },
+    attendance: { search: '', page: 1, limit: 10 },
+    exams: { search: '', page: 1, limit: 10 }
+};
+
 console.log('Dashboard script loaded');
 
 interface SidebarItem {
@@ -98,6 +123,9 @@ function getIcon(name: string) {
         'CalendarCheck': '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>',
         'FileText': '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>',
         'CheckSquare': '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>',
+        'Search': '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>',
+        'ChevronLeft': '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>',
+        'ChevronRight': '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>',
         'BarChart3': '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 20V10M12 20V4M6 20v-6"></path></svg>',
         'GraduationCap': '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222"></path></svg>',
         'CreditCard': '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>',
@@ -395,21 +423,93 @@ async function renderDashboardStats(role: string) {
     }
 }
 
+function renderPagination(total: number, page: number, totalPages: number, moduleName: string, role: string = 'Admin') {
+    if (totalPages <= 1) return '';
+    
+    let pages = [];
+    const startPage = Math.max(1, page - 2);
+    const endPage = Math.min(totalPages, page + 2);
+
+    for (let i = startPage; i <= endPage; i++) {
+        pages.push(`
+            <button onclick="window.changePage('${moduleName}', ${i}, '${role}')" class="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold transition-all ${i === page ? 'bg-indigo-600 text-white shadow-md shadow-indigo-100' : 'text-slate-500 hover:bg-slate-100'}">
+                ${i}
+            </button>
+        `);
+    }
+
+    return `
+        <div class="p-6 border-t border-slate-50 flex items-center justify-between">
+            <div class="text-xs font-medium text-slate-400">
+                Showing <span class="text-slate-900 font-bold">${Math.min(total, (page - 1) * 10 + 1)}-${Math.min(total, page * 10)}</span> of <span class="text-slate-900 font-bold">${total}</span> results
+            </div>
+            <div class="flex gap-2">
+                <button onclick="window.changePage('${moduleName}', ${page - 1}, '${role}')" ${page === 1 ? 'disabled' : ''} class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 disabled:opacity-30 disabled:hover:bg-transparent transition-all">
+                    ${getIcon('ChevronLeft')}
+                </button>
+                ${pages.join('')}
+                <button onclick="window.changePage('${moduleName}', ${page + 1}, '${role}')" ${page === totalPages ? 'disabled' : ''} class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 disabled:opacity-30 disabled:hover:bg-transparent transition-all">
+                    ${getIcon('ChevronRight')}
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+(window as any).changePage = (moduleName: string, page: number, role: string) => {
+    moduleState[moduleName].page = page;
+    if (moduleName === 'students') renderStudentsModule(role);
+    else if (moduleName === 'staff') renderStaffModule();
+    else if (moduleName === 'attendance') renderAttendanceModule();
+    else if (moduleName === 'exams') renderExamsModule();
+    else if (moduleName === 'documents') renderDocumentsModule(role);
+    else if (moduleName === 'results') renderStudentResults();
+    else if (moduleName === 'attendance_history') renderStudentAttendance();
+};
+
 async function renderStudentsModule(role: string = 'Admin') {
     const dashboardContent = document.getElementById('dashboardContent');
     if (!dashboardContent) return;
 
+    const { search, classId, page, limit } = moduleState.students;
+
     try {
-        const res = await fetch('/api/students');
-        const students = await res.json();
+        const [res, classRes] = await Promise.all([
+            fetch(`/api/students?search=${search}&classId=${classId}&page=${page}&limit=${limit}`),
+            fetch('/api/classes')
+        ]);
+        const { data: students, total, totalPages } = await res.json();
+        const classes = await classRes.json();
 
         const isAdmin = role === 'Admin';
 
         dashboardContent.innerHTML = `
             <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-                <div class="p-6 border-b border-slate-50 flex justify-between items-center">
-                    <h3 class="font-bold text-slate-900">Student Management</h3>
-                    <div class="flex gap-3">
+                <div class="p-6 border-b border-slate-50 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <h3 class="font-bold text-slate-900">Student Management</h3>
+                        <p class="text-xs text-slate-500">Total ${total} students found</p>
+                    </div>
+                    <div class="flex flex-wrap gap-3 w-full md:w-auto">
+                        <div class="relative flex-1 md:flex-none">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                                ${getIcon('Search')}
+                            </span>
+                            <input 
+                                type="text" 
+                                placeholder="Search name, email, roll..." 
+                                value="${search}"
+                                oninput="window.handleStudentSearch(this.value)"
+                                class="pl-10 pr-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full md:w-64"
+                            >
+                        </div>
+                        <select 
+                            onchange="window.handleStudentClassFilter(this.value)"
+                            class="bg-slate-50 border border-slate-100 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        >
+                            <option value="">All Classes</option>
+                            ${classes.map((c: any) => `<option value="${c.id}" ${classId === c.id ? 'selected' : ''}>${c.name} ${c.section}</option>`).join('')}
+                        </select>
                         <button onclick="window.renderStudentsModule('${role}')" class="p-2 text-slate-400 hover:text-indigo-600 transition-colors">
                             ${getIcon('RefreshCw')}
                         </button>
@@ -426,9 +526,8 @@ async function renderStudentsModule(role: string = 'Admin') {
                             <tr>
                                 <th class="px-6 py-4 font-semibold">Roll No</th>
                                 <th class="px-6 py-4 font-semibold">Name</th>
-                                <th class="px-6 py-4 font-semibold">Grade</th>
-                                <th class="px-6 py-4 font-semibold">Section</th>
-                                <th class="px-6 py-4 font-semibold">Actions</th>
+                                <th class="px-6 py-4 font-semibold text-center">Class</th>
+                                <th class="px-6 py-4 font-semibold text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50">
@@ -436,9 +535,12 @@ async function renderStudentsModule(role: string = 'Admin') {
                                 <tr class="hover:bg-slate-50 transition-colors">
                                     <td class="px-6 py-4 text-sm font-medium text-slate-900">${s.rollNo}</td>
                                     <td class="px-6 py-4 text-sm text-slate-600">${s.name}</td>
-                                    <td class="px-6 py-4 text-sm text-slate-600">${s.grade}</td>
-                                    <td class="px-6 py-4 text-sm text-slate-600">${s.section}</td>
-                                    <td class="px-6 py-4 text-sm flex gap-3">
+                                    <td class="px-6 py-4 text-sm text-slate-600 text-center">
+                                        <span class="px-2 py-1 bg-slate-100 rounded-lg font-bold text-[10px] uppercase">
+                                            ${s.classInfo ? `${s.classInfo.name} ${s.classInfo.section}` : 'N/A'}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 text-sm flex justify-end gap-3">
                                         <button onclick="window.viewUserDocuments('${s.id}', 'Student', '${s.name}')" class="text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1">
                                             ${getIcon('Files')} Docs
                                         </button>
@@ -452,6 +554,7 @@ async function renderStudentsModule(role: string = 'Admin') {
                         </tbody>
                     </table>
                 </div>
+                ${renderPagination(total, page, totalPages, 'students', role)}
             </div>
         `;
     } catch (err) {
@@ -459,18 +562,38 @@ async function renderStudentsModule(role: string = 'Admin') {
     }
 }
 
+(window as any).renderStudentsModule = renderStudentsModule;
+
+(window as any).handleStudentSearch = debounce((val: string) => {
+    moduleState.students.search = val;
+    moduleState.students.page = 1;
+    renderStudentsModule();
+}, 300);
+
+(window as any).handleStudentClassFilter = (val: string) => {
+    moduleState.students.classId = val;
+    moduleState.students.page = 1;
+    renderStudentsModule();
+};
+
 (window as any).addStudent = async () => {
+    const classRes = await fetch('/api/classes');
+    const classes = await classRes.json();
+    
     const name = prompt("Enter Student Name:");
     if (!name) return;
-    const grade = prompt("Enter Grade (e.g. 10th):");
-    const section = prompt("Enter Section (e.g. A):");
+    
+    const classList = classes.map((c: any) => `${c.id}: ${c.name} - ${c.section}`).join('\n');
+    const classId = prompt(`Select Class ID:\n${classList}`);
+    if (!classId) return;
+    
     const rollNo = prompt("Enter Roll No:");
 
     try {
         await fetch('/api/students', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, grade, section, rollNo })
+            body: JSON.stringify({ name, classId, rollNo })
         });
         renderStudentsModule();
     } catch (err) {
@@ -479,17 +602,23 @@ async function renderStudentsModule(role: string = 'Admin') {
 };
 
 (window as any).editStudent = async (id: string) => {
+    const classRes = await fetch('/api/classes');
+    const classes = await classRes.json();
+    
     const name = prompt("Update Student Name:");
     if (!name) return;
-    const grade = prompt("Update Grade:");
-    const section = prompt("Update Section:");
+    
+    const classList = classes.map((c: any) => `${c.id}: ${c.name} - ${c.section}`).join('\n');
+    const classId = prompt(`Update Class ID:\n${classList}`);
+    if (!classId) return;
+    
     const rollNo = prompt("Update Roll No:");
 
     try {
         await fetch(`/api/students/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, grade, section, rollNo })
+            body: JSON.stringify({ name, classId, rollNo })
         });
         renderStudentsModule();
     } catch (err) {
@@ -511,15 +640,42 @@ async function renderStaffModule() {
     const dashboardContent = document.getElementById('dashboardContent');
     if (!dashboardContent) return;
 
+    const { search, role, page, limit } = moduleState.staff;
+
     try {
-        const res = await fetch('/api/staff');
-        const staff = await res.json();
+        const res = await fetch(`/api/staff?search=${search}&role=${role}&page=${page}&limit=${limit}`);
+        const { data: staff, total, totalPages } = await res.json();
 
         dashboardContent.innerHTML = `
             <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-                <div class="p-6 border-b border-slate-50 flex justify-between items-center">
-                    <h3 class="font-bold text-slate-900">Staff Directory</h3>
-                    <div class="flex gap-3">
+                <div class="p-6 border-b border-slate-50 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <h3 class="font-bold text-slate-900">Staff Directory</h3>
+                        <p class="text-xs text-slate-500">Total ${total} staff found</p>
+                    </div>
+                    <div class="flex flex-wrap gap-3 w-full md:w-auto">
+                        <div class="relative flex-1 md:flex-none">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                                ${getIcon('Search')}
+                            </span>
+                            <input 
+                                type="text" 
+                                placeholder="Search name, email..." 
+                                value="${search}"
+                                oninput="window.handleStaffSearch(this.value)"
+                                class="pl-10 pr-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full md:w-64"
+                            >
+                        </div>
+                        <select 
+                            onchange="window.handleStaffRoleFilter(this.value)"
+                            class="bg-slate-50 border border-slate-100 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        >
+                            <option value="">All Roles</option>
+                            <option value="Teaching Staff" ${role === 'Teaching Staff' ? 'selected' : ''}>Teaching Staff</option>
+                            <option value="Non-Teaching Staff" ${role === 'Non-Teaching Staff' ? 'selected' : ''}>Non-Teaching Staff</option>
+                            <option value="HR" ${role === 'HR' ? 'selected' : ''}>HR</option>
+                            <option value="Accounts" ${role === 'Accounts' ? 'selected' : ''}>Accounts</option>
+                        </select>
                         <button onclick="window.renderStaffModule()" class="p-2 text-slate-400 hover:text-indigo-600 transition-colors">
                             ${getIcon('RefreshCw')}
                         </button>
@@ -543,7 +699,11 @@ async function renderStaffModule() {
                                 <tr class="hover:bg-slate-50 transition-colors">
                                     <td class="px-6 py-4 text-sm font-medium text-slate-900">${s.name}</td>
                                     <td class="px-6 py-4 text-sm text-slate-600">${s.role}</td>
-                                    <td class="px-6 py-4 text-sm text-slate-600">${s.subject || s.department || 'N/A'}</td>
+                                    <td class="px-6 py-4 text-sm text-slate-600">
+                                        ${s.assignments && s.assignments.length > 0 
+                                            ? s.assignments.map((a: any) => `${a.subject?.name} (${a.class?.name})`).join(', ') 
+                                            : (s.subject || s.department || 'N/A')}
+                                    </td>
                                     <td class="px-6 py-4 text-sm flex gap-3">
                                         <button onclick="window.viewUserDocuments('${s.id}', '${s.role}', '${s.name}')" class="text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1">
                                             ${getIcon('Files')} Docs
@@ -556,12 +716,27 @@ async function renderStaffModule() {
                         </tbody>
                     </table>
                 </div>
+                ${renderPagination(total, page, totalPages, 'staff')}
             </div>
         `;
     } catch (err) {
         console.error('Staff fetch error:', err);
     }
 }
+
+(window as any).renderStaffModule = renderStaffModule;
+
+(window as any).handleStaffSearch = debounce((val: string) => {
+    moduleState.staff.search = val;
+    moduleState.staff.page = 1;
+    renderStaffModule();
+}, 300);
+
+(window as any).handleStaffRoleFilter = (val: string) => {
+    moduleState.staff.role = val;
+    moduleState.staff.page = 1;
+    renderStaffModule();
+};
 
 (window as any).editStaff = async (id: string) => {
     const name = prompt("Update Staff Name:");
@@ -647,54 +822,78 @@ async function renderLeavesModule() {
     const dashboardContent = document.getElementById('dashboardContent');
     if (!dashboardContent) return;
 
+    const { search, page, limit } = moduleState.leaves;
+
     try {
-        const res = await fetch('/api/leaves');
-        const leaves = await res.json();
-        const staffRes = await fetch('/api/staff');
-        const staff = await staffRes.json();
-        const staffMap = new Map(staff.map((s: any) => [s.id, s.name]));
+        const res = await fetch(`/api/leaves?search=${search}&page=${page}&limit=${limit}`);
+        const { data: leaves, total, totalPages } = await res.json();
 
         dashboardContent.innerHTML = `
-            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-                <div class="p-6 border-b border-slate-50">
-                    <h3 class="font-bold text-slate-900">Leave Requests</h3>
+            <div class="space-y-6">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-900">Leave Requests</h3>
+                        <p class="text-slate-500 text-sm">Manage and view employee leave requests</p>
+                    </div>
+                    <div class="flex flex-wrap gap-3 w-full md:w-auto">
+                        <div class="relative flex-1 md:flex-none">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                                ${getIcon('Search')}
+                            </span>
+                            <input 
+                                type="text" 
+                                placeholder="Search leaves..." 
+                                value="${search}"
+                                oninput="window.handleLeaveSearch(this.value)"
+                                class="pl-10 pr-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full md:w-64"
+                            >
+                        </div>
+                    </div>
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left">
-                        <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
-                            <tr>
-                                <th class="px-6 py-4 font-semibold">Employee</th>
-                                <th class="px-6 py-4 font-semibold">Duration</th>
-                                <th class="px-6 py-4 font-semibold">Reason</th>
-                                <th class="px-6 py-4 font-semibold">Status</th>
-                                <th class="px-6 py-4 font-semibold text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-50">
-                            ${leaves.map((l: any) => `
-                                <tr class="hover:bg-slate-50 transition-colors">
-                                    <td class="px-6 py-4 text-sm font-medium text-slate-900">${staffMap.get(l.staffId) || 'Unknown'}</td>
-                                    <td class="px-6 py-4 text-sm text-slate-600">${l.startDate} to ${l.endDate}</td>
-                                    <td class="px-6 py-4 text-sm text-slate-600">${l.reason}</td>
-                                    <td class="px-6 py-4 text-sm">
-                                        <span class="px-2 py-1 rounded-full text-[10px] font-bold uppercase ${
-                                            l.status === 'Approved' ? 'bg-emerald-100 text-emerald-700' : 
-                                            l.status === 'Rejected' ? 'bg-rose-100 text-rose-700' : 
-                                            'bg-amber-100 text-amber-700'
-                                        }">
-                                            ${l.status}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 text-sm text-right">
-                                        ${l.status === 'Pending' ? `
-                                            <button onclick="window.updateLeaveStatus('${l.id}', 'Approved')" class="text-emerald-600 hover:text-emerald-800 font-bold mr-3">Approve</button>
-                                            <button onclick="window.updateLeaveStatus('${l.id}', 'Rejected')" class="text-rose-600 hover:text-rose-800 font-bold">Reject</button>
-                                        ` : '<span class="text-slate-400 italic">Processed</span>'}
-                                    </td>
+
+                <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
+                                <tr>
+                                    <th class="px-6 py-4 font-semibold">Employee</th>
+                                    <th class="px-6 py-4 font-semibold">Duration</th>
+                                    <th class="px-6 py-4 font-semibold">Reason</th>
+                                    <th class="px-6 py-4 font-semibold">Status</th>
+                                    <th class="px-6 py-4 font-semibold text-right">Actions</th>
                                 </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody class="divide-y divide-slate-50">
+                                ${leaves.length === 0 ? `
+                                    <tr>
+                                        <td colspan="5" class="px-6 py-12 text-center text-slate-400">No leave requests found</td>
+                                    </tr>
+                                ` : leaves.map((l: any) => `
+                                    <tr class="hover:bg-slate-50 transition-colors">
+                                        <td class="px-6 py-4 text-sm font-medium text-slate-900">${l.staffInfo?.name || 'Unknown'}</td>
+                                        <td class="px-6 py-4 text-sm text-slate-600">${l.startDate} to ${l.endDate}</td>
+                                        <td class="px-6 py-4 text-sm text-slate-600">${l.reason}</td>
+                                        <td class="px-6 py-4 text-sm">
+                                            <span class="px-2 py-1 rounded-full text-[10px] font-bold uppercase ${
+                                                l.status === 'Approved' ? 'bg-emerald-100 text-emerald-700' : 
+                                                l.status === 'Rejected' ? 'bg-rose-100 text-rose-700' : 
+                                                'bg-amber-100 text-amber-700'
+                                            }">
+                                                ${l.status}
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm text-right">
+                                            ${l.status === 'Pending' ? `
+                                                <button onclick="window.updateLeaveStatus('${l.id}', 'Approved')" class="text-emerald-600 hover:text-emerald-800 font-bold mr-3">Approve</button>
+                                                <button onclick="window.updateLeaveStatus('${l.id}', 'Rejected')" class="text-rose-600 hover:text-rose-800 font-bold">Reject</button>
+                                            ` : '<span class="text-slate-400 italic">Processed</span>'}
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                    ${renderPagination(total, page, totalPages, 'leaves')}
                 </div>
             </div>
         `;
@@ -702,6 +901,12 @@ async function renderLeavesModule() {
         console.error('Leaves fetch error:', err);
     }
 }
+
+(window as any).handleLeaveSearch = debounce((val: string) => {
+    moduleState.leaves.search = val;
+    moduleState.leaves.page = 1;
+    renderLeavesModule();
+}, 300);
 
 (window as any).updateLeaveStatus = async (id: string, status: string) => {
     try {
@@ -723,41 +928,74 @@ async function renderTasksModule() {
     const user = getCurrentUser();
     if (!user) return;
 
+    const { search, page, limit } = moduleState.tasks;
+
     try {
-        // If non-teaching staff, show only their tasks. If admin/HR, show all?
-        // Let's assume non-teaching staff has staffId in their user object.
-        const url = user.staffId ? `/api/tasks?staffId=${user.staffId}` : '/api/tasks';
+        let url = `/api/tasks?search=${search}&page=${page}&limit=${limit}`;
+        if (user.staffId) {
+            url += `&staffId=${user.staffId}`;
+        }
+        
         const res = await fetch(url);
-        const tasks = await res.json();
+        const { data: tasks, total, totalPages } = await res.json();
 
         dashboardContent.innerHTML = `
-            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="font-bold text-slate-900">My Tasks</h3>
-                    ${user.role === 'Admin' || user.role === 'HR' ? `
-                        <button onclick="window.addTask()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all">
-                            Assign Task
-                        </button>
-                    ` : ''}
-                </div>
-                <div class="grid gap-4">
-                    ${tasks.map((t: any) => `
-                        <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex justify-between items-start">
-                            <div>
-                                <div class="font-bold text-slate-900">${t.title}</div>
-                                <div class="text-sm text-slate-500 mb-2">${t.description}</div>
-                                <div class="text-xs text-slate-400">Due: ${t.dueDate}</div>
-                            </div>
-                            <div class="flex flex-col items-end gap-2">
-                                <span class="px-2 py-1 rounded-full text-[10px] font-bold uppercase ${t.status === 'Completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">
-                                    ${t.status}
-                                </span>
-                                ${t.status === 'Pending' ? `
-                                    <button onclick="window.updateTaskStatus('${t.id}', 'Completed')" class="text-indigo-600 text-xs font-bold hover:underline">Mark Complete</button>
-                                ` : ''}
-                            </div>
+            <div class="space-y-6">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-900">Task Management</h3>
+                        <p class="text-slate-500 text-sm">Manage and view assigned tasks</p>
+                    </div>
+                    <div class="flex flex-wrap gap-3 w-full md:w-auto">
+                        <div class="relative flex-1 md:flex-none">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                                ${getIcon('Search')}
+                            </span>
+                            <input 
+                                type="text" 
+                                placeholder="Search tasks..." 
+                                value="${search}"
+                                oninput="window.handleTaskSearch(this.value)"
+                                class="pl-10 pr-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full md:w-64"
+                            >
                         </div>
-                    `).join('')}
+                        ${user.role === 'Admin' || user.role === 'HR' ? `
+                            <button onclick="window.addTask()" class="bg-indigo-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all shadow-sm flex items-center gap-2">
+                                ${getIcon('Plus')}
+                                Assign Task
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+                    <div class="p-6">
+                        <div class="grid gap-4">
+                            ${tasks.length === 0 ? `
+                                <div class="text-center py-12 text-slate-400">No tasks found</div>
+                            ` : tasks.map((t: any) => `
+                                <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex justify-between items-start">
+                                    <div>
+                                        <div class="font-bold text-slate-900">${t.title}</div>
+                                        <div class="text-sm text-slate-500 mb-2">${t.description}</div>
+                                        <div class="flex items-center gap-4">
+                                            <div class="text-xs text-slate-400">Due: ${t.dueDate}</div>
+                                            <div class="text-xs text-slate-400">Assigned to: ${t.staffInfo?.name || 'Unknown'}</div>
+                                        </div>
+                                    </div>
+                                    <div class="flex flex-col items-end gap-2">
+                                        <span class="px-2 py-1 rounded-full text-[10px] font-bold uppercase ${t.status === 'Completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">
+                                            ${t.status}
+                                        </span>
+                                        ${t.status === 'Pending' ? `
+                                            <button onclick="window.updateTaskStatus('${t.id}', 'Completed')" class="text-indigo-600 text-xs font-bold hover:underline">Mark Complete</button>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    ${renderPagination(total, page, totalPages, 'tasks')}
                 </div>
             </div>
         `;
@@ -765,6 +1003,12 @@ async function renderTasksModule() {
         console.error('Tasks fetch error:', err);
     }
 }
+
+(window as any).handleTaskSearch = debounce((val: string) => {
+    moduleState.tasks.search = val;
+    moduleState.tasks.page = 1;
+    renderTasksModule();
+}, 300);
 
 (window as any).updateTaskStatus = async (id: string, status: string) => {
     try {
@@ -802,54 +1046,93 @@ async function renderAccountsModule() {
     const dashboardContent = document.getElementById('dashboardContent');
     if (!dashboardContent) return;
 
+    const { search, page, limit } = moduleState.fees;
+
     try {
-        const res = await fetch('/api/fees');
-        const fees = await res.json();
+        const res = await fetch(`/api/fees?search=${search}&page=${page}&limit=${limit}`);
+        const { data: fees, total, totalPages } = await res.json();
 
         dashboardContent.innerHTML = `
-            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-                <div class="p-6 border-b border-slate-50 flex justify-between items-center">
-                    <h3 class="font-bold text-slate-900">Accounts - Fee Transactions</h3>
-                    <button onclick="window.addFee()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all">
-                        Add Transaction
+            <div class="space-y-6">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div class="relative flex-1 max-w-md">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                            ${getIcon('Search', 18)}
+                        </span>
+                        <input 
+                            type="text" 
+                            placeholder="Search by student ID or name..." 
+                            value="${search}"
+                            oninput="window.handleFeeSearch(this.value)"
+                            class="w-full pl-11 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                        >
+                    </div>
+                    <button onclick="window.addFee()" class="bg-indigo-600 text-white px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all flex items-center gap-2">
+                        ${getIcon('Plus', 18)} Add Transaction
                     </button>
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left">
-                        <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
-                            <tr>
-                                <th class="px-6 py-4 font-semibold">Student ID</th>
-                                <th class="px-6 py-4 font-semibold">Amount</th>
-                                <th class="px-6 py-4 font-semibold">Status</th>
-                                <th class="px-6 py-4 font-semibold">Date</th>
-                                <th class="px-6 py-4 font-semibold">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-50">
-                            ${fees.map((f: any) => `
-                                <tr class="hover:bg-slate-50 transition-colors">
-                                    <td class="px-6 py-4 text-sm text-slate-600">#STU-${f.studentId}</td>
-                                    <td class="px-6 py-4 text-sm font-bold text-slate-900">₹${f.amount}</td>
-                                    <td class="px-6 py-4 text-sm">
-                                        <span class="px-2 py-1 rounded-full text-[10px] font-bold uppercase ${f.status === 'Paid' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">
-                                            ${f.status}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 text-sm text-slate-500">${f.date}</td>
-                                    <td class="px-6 py-4 text-sm">
-                                        <button onclick="window.deleteFee('${f.id}')" class="text-rose-600 hover:text-rose-800 font-medium">Delete</button>
-                                    </td>
+
+                <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+                    <div class="p-6 border-b border-slate-50">
+                        <h3 class="font-bold text-slate-900 text-lg">Fee Transactions</h3>
+                        <p class="text-slate-500 text-sm">Manage student fee records and payments</p>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-slate-50/50 text-slate-500 text-xs uppercase tracking-wider">
+                                <tr>
+                                    <th class="px-6 py-4 font-semibold">Student</th>
+                                    <th class="px-6 py-4 font-semibold">Amount</th>
+                                    <th class="px-6 py-4 font-semibold">Status</th>
+                                    <th class="px-6 py-4 font-semibold">Date</th>
+                                    <th class="px-6 py-4 font-semibold text-right">Actions</th>
                                 </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody class="divide-y divide-slate-50">
+                                ${fees.length > 0 ? fees.map((f: any) => `
+                                    <tr class="hover:bg-slate-50/50 transition-colors group">
+                                        <td class="px-6 py-4">
+                                            <div class="flex flex-col">
+                                                <span class="text-sm font-semibold text-slate-900">${f.studentInfo?.name || 'Unknown Student'}</span>
+                                                <span class="text-xs text-slate-500">ID: ${f.studentId}</span>
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm font-bold text-slate-900">₹${f.amount.toLocaleString()}</td>
+                                        <td class="px-6 py-4 text-sm">
+                                            <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${f.status === 'Paid' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">
+                                                ${f.status}
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm text-slate-500">${new Date(f.date).toLocaleDateString()}</td>
+                                        <td class="px-6 py-4 text-sm text-right">
+                                            <button onclick="window.deleteFee('${f.id}')" class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all">
+                                                ${getIcon('Trash2', 18)}
+                                            </button>
+                                        </td>
+                                    </tr>
+                                `).join('') : `
+                                    <tr>
+                                        <td colspan="5" class="px-6 py-12 text-center text-slate-500 italic">No transactions found</td>
+                                    </tr>
+                                `}
+                            </tbody>
+                        </table>
+                    </div>
+                    ${renderPagination(total, page, totalPages, 'fees')}
                 </div>
             </div>
         `;
     } catch (err) {
         console.error('Accounts fetch error:', err);
+        dashboardContent.innerHTML = `<div class="p-8 text-center text-rose-600 font-medium">Failed to load fee transactions. Please try again.</div>`;
     }
 }
+
+(window as any).handleFeeSearch = debounce((val: string) => {
+    moduleState.fees.search = val;
+    moduleState.fees.page = 1;
+    renderAccountsModule();
+}, 300);
 
 (window as any).addFee = async () => {
     const studentId = prompt("Enter Student ID:");
@@ -883,44 +1166,84 @@ async function renderTransportModule() {
     const dashboardContent = document.getElementById('dashboardContent');
     if (!dashboardContent) return;
 
+    const { search, page, limit } = moduleState.transport;
+
     try {
-        const res = await fetch('/api/transport');
-        const transport = await res.json();
+        const res = await fetch(`/api/transport?search=${search}&page=${page}&limit=${limit}`);
+        const { data: transport, total, totalPages } = await res.json();
 
         dashboardContent.innerHTML = `
-            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="font-bold text-slate-900">Transport - Vehicle List</h3>
-                    <button onclick="window.addVehicle()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all">
-                        Add Vehicle
+            <div class="space-y-6">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div class="relative flex-1 max-w-md">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                            ${getIcon('Search', 18)}
+                        </span>
+                        <input 
+                            type="text" 
+                            placeholder="Search by vehicle, route, or driver..." 
+                            value="${search}"
+                            oninput="window.handleTransportSearch(this.value)"
+                            class="w-full pl-11 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                        >
+                    </div>
+                    <button onclick="window.addVehicle()" class="bg-indigo-600 text-white px-4 py-2.5 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all flex items-center gap-2">
+                        ${getIcon('Plus', 18)} Add Vehicle
                     </button>
                 </div>
-                <div class="grid md:grid-cols-2 gap-6">
-                    ${transport.map((v: any) => `
-                        <div class="p-6 bg-slate-50 rounded-3xl border border-slate-100 relative">
-                            <button onclick="window.deleteVehicle('${v.id}')" class="absolute top-4 right-4 text-rose-600 hover:text-rose-800">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                            </button>
-                            <div class="flex justify-between items-start mb-4">
-                                <div class="w-12 h-12 bg-amber-100 rounded-2xl flex items-center justify-center text-amber-600">
-                                    ${getIcon('Bus')}
-                                </div>
-                                <span class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-[10px] font-bold uppercase">Active</span>
-                            </div>
-                            <div class="text-lg font-bold text-slate-900 mb-1">${v.vehicleNo}</div>
-                            <div class="text-sm text-slate-500 mb-4">${v.route}</div>
-                            <div class="flex items-center gap-2 text-xs text-slate-600">
-                                <span class="font-bold">Driver:</span> ${v.driver}
-                            </div>
+
+                <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <div>
+                            <h3 class="font-bold text-slate-900 text-lg">Transport Fleet</h3>
+                            <p class="text-slate-500 text-sm">Manage school vehicles and routes</p>
                         </div>
-                    `).join('')}
+                    </div>
+                    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        ${transport.length > 0 ? transport.map((v: any) => `
+                            <div class="p-6 bg-slate-50/50 rounded-3xl border border-slate-100 relative group hover:border-indigo-100 hover:bg-white hover:shadow-md transition-all">
+                                <button onclick="window.deleteVehicle('${v.id}')" class="absolute top-4 right-4 p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all opacity-0 group-hover:opacity-100">
+                                    ${getIcon('Trash2', 18)}
+                                </button>
+                                <div class="flex justify-between items-start mb-4">
+                                    <div class="w-12 h-12 bg-amber-100 rounded-2xl flex items-center justify-center text-amber-600">
+                                        ${getIcon('Bus', 24)}
+                                    </div>
+                                    <span class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-[10px] font-bold uppercase tracking-wider">Active</span>
+                                </div>
+                                <div class="text-lg font-bold text-slate-900 mb-1">${v.vehicleNo}</div>
+                                <div class="text-sm text-slate-500 mb-4 flex items-center gap-2">
+                                    ${getIcon('MapPin', 14)} ${v.route}
+                                </div>
+                                <div class="flex items-center gap-2 text-xs text-slate-600 bg-white p-3 rounded-xl border border-slate-100">
+                                    <div class="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500">
+                                        ${getIcon('User', 14)}
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] uppercase font-bold text-slate-400">Driver</p>
+                                        <p class="font-semibold">${v.driver}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('') : `
+                            <div class="col-span-full py-12 text-center text-slate-500 italic">No vehicles found</div>
+                        `}
+                    </div>
+                    ${renderPagination(total, page, totalPages, 'transport')}
                 </div>
             </div>
         `;
     } catch (err) {
         console.error('Transport fetch error:', err);
+        dashboardContent.innerHTML = `<div class="p-8 text-center text-rose-600 font-medium">Failed to load transport data. Please try again.</div>`;
     }
 }
+
+(window as any).handleTransportSearch = debounce((val: string) => {
+    moduleState.transport.search = val;
+    moduleState.transport.page = 1;
+    renderTransportModule();
+}, 300);
 
 (window as any).addVehicle = async () => {
     const vehicleNo = prompt("Enter Vehicle No:");
@@ -953,46 +1276,76 @@ async function renderAdmissionModule() {
     const dashboardContent = document.getElementById('dashboardContent');
     if (!dashboardContent) return;
 
+    const { search, page, limit } = moduleState.admissions;
+
     try {
-        const res = await fetch('/api/admissions');
-        const admissions = await res.json();
+        const res = await fetch(`/api/admissions?search=${search}&page=${page}&limit=${limit}`);
+        const { data: admissions, total, totalPages } = await res.json();
 
         dashboardContent.innerHTML = `
-            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-                <div class="p-6 border-b border-slate-50 flex justify-between items-center">
-                    <h3 class="font-bold text-slate-900">Admission - Applicant List</h3>
-                    <button onclick="window.addAdmission()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all">
-                        New Admission
-                    </button>
+            <div class="space-y-6">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-900">Admission - Applicant List</h3>
+                        <p class="text-slate-500 text-sm">Manage and view admission applications</p>
+                    </div>
+                    <div class="flex flex-wrap gap-3 w-full md:w-auto">
+                        <div class="relative flex-1 md:flex-none">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                                ${getIcon('Search')}
+                            </span>
+                            <input 
+                                type="text" 
+                                placeholder="Search applicants..." 
+                                value="${search}"
+                                oninput="window.handleAdmissionSearch(this.value)"
+                                class="pl-10 pr-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full md:w-64"
+                            >
+                        </div>
+                        <button onclick="window.addAdmission()" class="bg-indigo-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all shadow-sm flex items-center gap-2">
+                            ${getIcon('UserPlus')}
+                            New Admission
+                        </button>
+                    </div>
                 </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left">
-                        <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
-                            <tr>
-                                <th class="px-6 py-4 font-semibold">Applicant Name</th>
-                                <th class="px-6 py-4 font-semibold">Grade Applied</th>
-                                <th class="px-6 py-4 font-semibold">Status</th>
-                                <th class="px-6 py-4 font-semibold">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-50">
-                            ${admissions.map((a: any) => `
-                                <tr class="hover:bg-slate-50 transition-colors">
-                                    <td class="px-6 py-4 text-sm font-medium text-slate-900">${a.applicantName}</td>
-                                    <td class="px-6 py-4 text-sm text-slate-600">${a.grade}</td>
-                                    <td class="px-6 py-4 text-sm">
-                                        <span class="px-2 py-1 rounded-full text-[10px] font-bold uppercase ${a.status === 'Approved' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">
-                                            ${a.status}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 text-sm flex gap-3">
-                                        <button onclick="window.updateAdmissionStatus('${a.id}', 'Approved')" class="text-emerald-600 hover:underline">Approve</button>
-                                        <button onclick="window.deleteAdmission('${a.id}')" class="text-rose-600 hover:underline">Delete</button>
-                                    </td>
+
+                <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
+                                <tr>
+                                    <th class="px-6 py-4 font-semibold">Applicant Name</th>
+                                    <th class="px-6 py-4 font-semibold">Grade Applied</th>
+                                    <th class="px-6 py-4 font-semibold">Status</th>
+                                    <th class="px-6 py-4 font-semibold text-right">Actions</th>
                                 </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody class="divide-y divide-slate-50">
+                                ${admissions.length === 0 ? `
+                                    <tr>
+                                        <td colspan="4" class="px-6 py-12 text-center text-slate-400">No applicants found</td>
+                                    </tr>
+                                ` : admissions.map((a: any) => `
+                                    <tr class="hover:bg-slate-50 transition-colors">
+                                        <td class="px-6 py-4 text-sm font-medium text-slate-900">${a.applicantName}</td>
+                                        <td class="px-6 py-4 text-sm text-slate-600">${a.grade}</td>
+                                        <td class="px-6 py-4 text-sm">
+                                            <span class="px-2 py-1 rounded-full text-[10px] font-bold uppercase ${a.status === 'Approved' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">
+                                                ${a.status}
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 text-right">
+                                            <div class="flex justify-end gap-3">
+                                                <button onclick="window.updateAdmissionStatus('${a.id}', 'Approved')" class="text-emerald-600 hover:text-emerald-700 font-bold text-sm transition-colors">Approve</button>
+                                                <button onclick="window.deleteAdmission('${a.id}')" class="text-rose-600 hover:text-rose-700 font-bold text-sm transition-colors">Delete</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                    ${renderPagination(total, page, totalPages, 'admissions')}
                 </div>
             </div>
         `;
@@ -1000,6 +1353,12 @@ async function renderAdmissionModule() {
         console.error('Admission fetch error:', err);
     }
 }
+
+(window as any).handleAdmissionSearch = debounce((val: string) => {
+    moduleState.admissions.search = val;
+    moduleState.admissions.page = 1;
+    renderAdmissionModule();
+}, 300);
 
 (window as any).addAdmission = async () => {
     const applicantName = prompt("Enter Applicant Name:");
@@ -1037,25 +1396,32 @@ async function renderAdmissionModule() {
         renderAdmissionModule();
     } catch (err) {
         console.error('Delete admission error:', err);
-    }
-};
-
 async function renderAttendanceModule() {
     const dashboardContent = document.getElementById('dashboardContent');
     if (!dashboardContent) return;
 
     const today = new Date().toISOString().split('T')[0];
     let selectedDate = today;
-    let selectedSubject = 'Mathematics';
+    let selectedClass = '';
+    let selectedSubject = '';
     let selectedTime = '09:00 AM';
 
-    const loadAttendance = async (date: string, subject: string) => {
+    const { search, page, limit } = moduleState.attendance;
+
+    const loadAttendance = async (date: string, classId: string, subjectId: string) => {
+        if (!classId || !subjectId) {
+            const listContainer = document.getElementById('attendanceList');
+            if (listContainer) {
+                listContainer.innerHTML = '<div class="text-center py-12 text-slate-400">Please select both class and subject to load attendance.</div>';
+            }
+            return;
+        }
         try {
             const [studentsRes, attendanceRes] = await Promise.all([
-                fetch('/api/students'),
-                fetch(`/api/attendance?date=${date}&subject=${subject}`)
+                fetch(`/api/students?classId=${classId}&search=${search}&page=${page}&limit=${limit}`),
+                fetch(`/api/attendance?date=${date}&subjectId=${subjectId}`)
             ]);
-            const students = await studentsRes.json();
+            const { data: students, total, totalPages } = await studentsRes.json();
             const attendance = await attendanceRes.json();
 
             const attendanceMap = new Map(attendance.map((a: any) => [a.studentId, a.status]));
@@ -1063,30 +1429,42 @@ async function renderAttendanceModule() {
             const listContainer = document.getElementById('attendanceList');
             if (listContainer) {
                 if (students.length === 0) {
-                    listContainer.innerHTML = '<div class="text-center py-12 text-slate-400">No students found.</div>';
+                    listContainer.innerHTML = '<div class="text-center py-12 text-slate-400">No students found for this class.</div>';
                     return;
                 }
 
-                listContainer.innerHTML = students.map((s: any) => {
-                    const status = attendanceMap.get(s.id) || 'Not Marked';
-                    return `
-                        <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                            <div class="flex items-center gap-4">
-                                <div class="text-sm font-bold text-slate-900">${s.rollNo}</div>
-                                <div class="text-sm font-medium text-slate-700">${s.name}</div>
-                            </div>
-                            <div class="flex items-center gap-4">
-                                <span class="text-[10px] font-bold uppercase px-2 py-1 rounded-lg ${status === 'Present' ? 'bg-emerald-100 text-emerald-700' : status === 'Absent' ? 'bg-rose-100 text-rose-700' : 'bg-slate-200 text-slate-600'}">
-                                    ${status}
-                                </span>
-                                <div class="flex gap-2">
-                                    <button onclick="window.markAttendance('${s.id}', 'Present', '${date}', '${subject}', '${selectedTime}')" class="px-3 py-1 bg-emerald-600 text-white rounded-lg text-[10px] font-bold hover:bg-emerald-700 transition-all">P</button>
-                                    <button onclick="window.markAttendance('${s.id}', 'Absent', '${date}', '${subject}', '${selectedTime}')" class="px-3 py-1 bg-rose-600 text-white rounded-lg text-[10px] font-bold hover:bg-rose-700 transition-all">A</button>
+                listContainer.innerHTML = `
+                    <div class="space-y-3">
+                        ${students.map((s: any) => {
+                            const status = attendanceMap.get(s.id) || 'Not Marked';
+                            return `
+                                <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100 group hover:bg-white hover:shadow-sm transition-all">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 font-bold text-xs">
+                                            ${s.rollNo}
+                                        </div>
+                                        <div class="flex flex-col">
+                                            <span class="text-sm font-semibold text-slate-900">${s.name}</span>
+                                            <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Roll No: ${s.rollNo}</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-6">
+                                        <span class="text-[10px] font-bold uppercase px-2.5 py-1 rounded-full tracking-wider ${status === 'Present' ? 'bg-emerald-100 text-emerald-700' : status === 'Absent' ? 'bg-rose-100 text-rose-700' : 'bg-slate-200 text-slate-600'}">
+                                            ${status}
+                                        </span>
+                                        <div class="flex gap-2">
+                                            <button onclick="window.markAttendance('${s.id}', 'Present', '${date}', '${subjectId}', '${selectedTime}')" class="w-8 h-8 flex items-center justify-center bg-white border border-emerald-200 text-emerald-600 rounded-lg text-xs font-bold hover:bg-emerald-600 hover:text-white transition-all shadow-sm">P</button>
+                                            <button onclick="window.markAttendance('${s.id}', 'Absent', '${date}', '${subjectId}', '${selectedTime}')" class="w-8 h-8 flex items-center justify-center bg-white border border-rose-200 text-rose-600 rounded-lg text-xs font-bold hover:bg-rose-600 hover:text-white transition-all shadow-sm">A</button>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
+                            `;
+                        }).join('')}
+                    </div>
+                    <div class="mt-6">
+                        ${renderPagination(total, page, totalPages, 'attendance')}
+                    </div>
+                `;
             }
         } catch (err) {
             console.error('Load attendance error:', err);
@@ -1095,8 +1473,14 @@ async function renderAttendanceModule() {
 
     const loadRecentLogs = async () => {
         try {
-            const res = await fetch('/api/attendance');
-            const allAttendance = await res.json();
+            const [attendanceRes, subjectsRes] = await Promise.all([
+                fetch('/api/attendance'),
+                fetch('/api/subjects')
+            ]);
+            const allAttendance = await attendanceRes.json();
+            const subjects = await subjectsRes.json();
+            const subjectMap = new Map(subjects.map((s: any) => [s.id, s.name]));
+
             allAttendance.sort((a: any, b: any) => b.date.localeCompare(a.date));
             
             const logsContainer = document.getElementById('recentAttendanceLogs');
@@ -1109,15 +1493,15 @@ async function renderAttendanceModule() {
 
                 const grouped: any = {};
                 recent.forEach((curr: any) => {
-                    const key = `${curr.date} - ${curr.subject}`;
-                    if (!grouped[key]) grouped[key] = { date: curr.date, subject: curr.subject, count: 0 };
+                    const key = `${curr.date} - ${curr.subjectId}`;
+                    if (!grouped[key]) grouped[key] = { date: curr.date, subjectId: curr.subjectId, count: 0 };
                     grouped[key].count++;
                 });
 
                 logsContainer.innerHTML = Object.values(grouped).map((g: any) => `
                     <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100 mb-2">
                         <div>
-                            <div class="text-sm font-bold text-slate-900">${g.subject}</div>
+                            <div class="text-sm font-bold text-slate-900">${subjectMap.get(g.subjectId) || 'Unknown Subject'}</div>
                             <div class="text-xs text-slate-500">${g.date}</div>
                         </div>
                         <div class="text-xs font-medium text-indigo-600">${g.count} Students</div>
@@ -1135,19 +1519,33 @@ async function renderAttendanceModule() {
                 <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
                     <div class="p-6 border-b border-slate-50">
                         <h3 class="font-bold text-slate-900 mb-4">Mark Attendance</h3>
-                        <div class="grid md:grid-cols-3 gap-4">
+                        <div class="mb-6 relative max-w-md">
+                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                                ${getIcon('Search', 18)}
+                            </span>
+                            <input 
+                                type="text" 
+                                placeholder="Search students..." 
+                                value="${search}"
+                                oninput="window.handleAttendanceSearch(this.value)"
+                                class="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                            >
+                        </div>
+                        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                             <div class="flex flex-col gap-1">
                                 <label class="text-xs font-bold text-slate-500">Select Date:</label>
                                 <input type="date" id="attendanceDatePicker" value="${today}" class="px-3 py-2 rounded-xl border border-slate-200 text-sm outline-none focus:ring-2 focus:ring-indigo-500 w-full">
                             </div>
                             <div class="flex flex-col gap-1">
+                                <label class="text-xs font-bold text-slate-500">Select Class:</label>
+                                <select id="attendanceClassPicker" class="px-3 py-2 rounded-xl border border-slate-200 text-sm outline-none focus:ring-2 focus:ring-indigo-500 w-full">
+                                    <option value="">Select Class</option>
+                                </select>
+                            </div>
+                            <div class="flex flex-col gap-1">
                                 <label class="text-xs font-bold text-slate-500">Select Subject:</label>
                                 <select id="attendanceSubjectPicker" class="px-3 py-2 rounded-xl border border-slate-200 text-sm outline-none focus:ring-2 focus:ring-indigo-500 w-full">
-                                    <option value="Mathematics">Mathematics</option>
-                                    <option value="Physics">Physics</option>
-                                    <option value="Chemistry">Chemistry</option>
-                                    <option value="English">English</option>
-                                    <option value="History">History</option>
+                                    <option value="">Select Subject</option>
                                 </select>
                             </div>
                             <div class="flex flex-col gap-1">
@@ -1164,7 +1562,7 @@ async function renderAttendanceModule() {
                     </div>
                     <div class="p-6">
                         <div id="attendanceList" class="grid gap-4">
-                            <div class="text-center py-12 text-slate-400">Loading students...</div>
+                            <div class="text-center py-12 text-slate-400">Please select class and subject to load students.</div>
                         </div>
                     </div>
                 </div>
@@ -1187,38 +1585,62 @@ async function renderAttendanceModule() {
     `;
 
     const datePicker = document.getElementById('attendanceDatePicker') as HTMLInputElement;
+    const classPicker = document.getElementById('attendanceClassPicker') as HTMLSelectElement;
     const subjectPicker = document.getElementById('attendanceSubjectPicker') as HTMLSelectElement;
     const timePicker = document.getElementById('attendanceTimePicker') as HTMLSelectElement;
 
+    // Populate pickers
+    try {
+        const [classesRes, subjectsRes] = await Promise.all([
+            fetch('/api/classes'),
+            fetch('/api/subjects')
+        ]);
+        const classes = await classesRes.json();
+        const subjects = await subjectsRes.json();
+
+        classPicker.innerHTML += classes.map((c: any) => `<option value="${c.id}">${c.name} - ${c.section}</option>`).join('');
+        subjectPicker.innerHTML += subjects.map((s: any) => `<option value="${s.id}">${s.name}</option>`).join('');
+    } catch (err) {
+        console.error('Error populating pickers:', err);
+    }
+
     const updateView = () => {
         selectedDate = datePicker.value;
+        selectedClass = classPicker.value;
         selectedSubject = subjectPicker.value;
         selectedTime = timePicker.value;
-        loadAttendance(selectedDate, selectedSubject);
+        loadAttendance(selectedDate, selectedClass, selectedSubject);
         loadRecentLogs();
     };
 
     datePicker.addEventListener('change', updateView);
+    classPicker.addEventListener('change', updateView);
     subjectPicker.addEventListener('change', updateView);
     timePicker.addEventListener('change', updateView);
 
-    loadAttendance(selectedDate, selectedSubject);
     loadRecentLogs();
 }
 
-(window as any).markAttendance = async (studentId: string, status: string, date: string, subject: string, time: string) => {
+(window as any).handleAttendanceSearch = debounce((val: string) => {
+    moduleState.attendance.search = val;
+    moduleState.attendance.page = 1;
+    renderAttendanceModule();
+}, 300);
+
+(window as any).markAttendance = async (studentId: string, status: string, date: string, subjectId: string, time: string) => {
     try {
         await fetch('/api/attendance', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ studentId, status, date, subject, time })
+            body: JSON.stringify({ studentId, status, date, subjectId, time })
         });
         // Refresh the list
         const datePicker = document.getElementById('attendanceDatePicker') as HTMLInputElement;
+        const classPicker = document.getElementById('attendanceClassPicker') as HTMLSelectElement;
         const subjectPicker = document.getElementById('attendanceSubjectPicker') as HTMLSelectElement;
-        if (datePicker && subjectPicker) {
+        if (datePicker && classPicker && subjectPicker) {
             const currentFunc = (window as any).refreshAttendance;
-            if (typeof currentFunc === 'function') currentFunc(datePicker.value, subjectPicker.value);
+            if (typeof currentFunc === 'function') currentFunc(datePicker.value, classPicker.value, subjectPicker.value);
         }
     } catch (err) {
         console.error('Mark attendance error:', err);
@@ -1226,38 +1648,47 @@ async function renderAttendanceModule() {
 };
 
 // Helper to refresh attendance list without full re-render
-(window as any).refreshAttendance = async (date: string, subject: string) => {
-    const studentsRes = await fetch('/api/students');
-    const attendanceRes = await fetch(`/api/attendance?date=${date}&subject=${subject}`);
-    const students = await studentsRes.json();
-    const attendance = await attendanceRes.json();
-    const attendanceMap = new Map(attendance.map((a: any) => [a.studentId, a.status]));
+(window as any).refreshAttendance = async (date: string, classId: string, subjectId: string) => {
+    if (!classId || !subjectId) return;
+    try {
+        const [studentsRes, attendanceRes] = await Promise.all([
+            fetch(`/api/students?classId=${classId}`),
+            fetch(`/api/attendance?date=${date}&subjectId=${subjectId}`)
+        ]);
+        const students = await studentsRes.json();
+        const attendance = await attendanceRes.json();
+        const attendanceMap = new Map(attendance.map((a: any) => [a.studentId, a.status]));
 
-    const listContainer = document.getElementById('attendanceList');
-    if (listContainer) {
-        const timePicker = document.getElementById('attendanceTimePicker') as HTMLSelectElement;
-        const selectedTime = timePicker?.value || '09:00 AM';
+        const listContainer = document.getElementById('attendanceList');
+        if (listContainer) {
+            if (students.length === 0) {
+                listContainer.innerHTML = '<div class="text-center py-12 text-slate-400">No students found for this class.</div>';
+                return;
+            }
 
-        listContainer.innerHTML = students.map((s: any) => {
-            const status = attendanceMap.get(s.id) || 'Not Marked';
-            return `
-                <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                    <div class="flex items-center gap-4">
-                        <div class="text-sm font-bold text-slate-900">${s.rollNo}</div>
-                        <div class="text-sm font-medium text-slate-700">${s.name}</div>
-                    </div>
-                    <div class="flex items-center gap-4">
-                        <span class="text-[10px] font-bold uppercase px-2 py-1 rounded-lg ${status === 'Present' ? 'bg-emerald-100 text-emerald-700' : status === 'Absent' ? 'bg-rose-100 text-rose-700' : 'bg-slate-200 text-slate-600'}">
-                            ${status}
-                        </span>
-                        <div class="flex gap-2">
-                            <button onclick="window.markAttendance('${s.id}', 'Present', '${date}', '${subject}', '${selectedTime}')" class="px-3 py-1 bg-emerald-600 text-white rounded-lg text-[10px] font-bold hover:bg-emerald-700 transition-all">P</button>
-                            <button onclick="window.markAttendance('${s.id}', 'Absent', '${date}', '${subject}', '${selectedTime}')" class="px-3 py-1 bg-rose-600 text-white rounded-lg text-[10px] font-bold hover:bg-rose-700 transition-all">A</button>
+            listContainer.innerHTML = students.map((s: any) => {
+                const status = attendanceMap.get(s.id) || 'Not Marked';
+                return `
+                    <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                        <div class="flex items-center gap-4">
+                            <div class="text-sm font-bold text-slate-900">${s.rollNo}</div>
+                            <div class="text-sm font-medium text-slate-700">${s.name}</div>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <span class="text-[10px] font-bold uppercase px-2 py-1 rounded-lg ${status === 'Present' ? 'bg-emerald-100 text-emerald-700' : status === 'Absent' ? 'bg-rose-100 text-rose-700' : 'bg-slate-200 text-slate-600'}">
+                                ${status}
+                            </span>
+                            <div class="flex gap-2">
+                                <button onclick="window.markAttendance('${s.id}', 'Present', '${date}', '${subjectId}', '09:00 AM')" class="px-3 py-1 bg-emerald-600 text-white rounded-lg text-[10px] font-bold hover:bg-emerald-700 transition-all">P</button>
+                                <button onclick="window.markAttendance('${s.id}', 'Absent', '${date}', '${subjectId}', '09:00 AM')" class="px-3 py-1 bg-rose-600 text-white rounded-lg text-[10px] font-bold hover:bg-rose-700 transition-all">A</button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            `;
-        }).join('');
+                `;
+            }).join('');
+        }
+    } catch (err) {
+        console.error('Refresh attendance error:', err);
     }
 };
 
@@ -1268,95 +1699,144 @@ async function renderExamsModule() {
     const user = getCurrentUser();
     if (!user) return;
 
+    const { search, page, limit } = moduleState.exams;
+    const selectedClassId = (document.getElementById('examClass') as HTMLSelectElement)?.value || '';
+
     try {
         const [studentsRes, classesRes, subjectsRes] = await Promise.all([
-            fetch('/api/students'),
+            fetch(`/api/students?classId=${selectedClassId}&search=${search}&page=${page}&limit=${limit}`),
             fetch('/api/classes'),
             fetch('/api/subjects')
         ]);
-        const students = await studentsRes.json();
+        const { data: students, total, totalPages } = await studentsRes.json();
         const classes = await classesRes.json();
         const subjects = await subjectsRes.json();
 
         dashboardContent.innerHTML = `
-            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-                <div class="p-6 border-b border-slate-50 flex justify-between items-center">
-                    <h3 class="font-bold text-slate-900">Enter Exam Marks</h3>
-                    <button onclick="window.saveAllMarks()" class="bg-indigo-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all shadow-sm">
+            <div class="space-y-6">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-900">Exam Marks Entry</h3>
+                        <p class="text-slate-500 text-sm">Enter and manage student marks for exams</p>
+                    </div>
+                    <button onclick="window.saveAllMarks()" class="bg-indigo-600 text-white px-8 py-3 rounded-2xl font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 flex items-center gap-2">
+                        ${getIcon('Save', 20)}
                         Save All Marks
                     </button>
                 </div>
-                <div class="p-6">
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Select Class</label>
-                            <select id="examClass" onchange="window.filterExamStudents()" class="w-full px-4 py-2 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+
+                <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div class="space-y-2">
+                            <label class="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Select Class</label>
+                            <select id="examClass" onchange="window.handleExamFilterChange()" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-slate-50/50">
                                 <option value="">All Classes</option>
-                                ${classes.map((c: any) => `<option value="${c.name}-${c.section}">${c.name} ${c.section}</option>`).join('')}
+                                ${classes.map((c: any) => `<option value="${c.id}" ${selectedClassId === c.id ? 'selected' : ''}>${c.name} ${c.section}</option>`).join('')}
                             </select>
                         </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Select Subject</label>
-                            <select id="examSubject" class="w-full px-4 py-2 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                        <div class="space-y-2">
+                            <label class="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Select Subject</label>
+                            <select id="examSubject" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-slate-50/50">
                                 ${subjects.map((s: any) => `<option value="${s.id}">${s.name}</option>`).join('')}
                             </select>
                         </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Exam Type</label>
-                            <select id="examType" class="w-full px-4 py-2 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                        <div class="space-y-2">
+                            <label class="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Exam Type</label>
+                            <select id="examType" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-slate-50/50">
                                 <option>Mid-Term Exam</option>
                                 <option>Final Exam</option>
                                 <option>Unit Test 1</option>
                                 <option>Unit Test 2</option>
                             </select>
                         </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Total Marks</label>
-                            <input type="number" id="totalMarks" placeholder="e.g. 100" class="w-full px-4 py-2 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                        <div class="space-y-2">
+                            <label class="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">Total Marks</label>
+                            <input type="number" id="totalMarks" placeholder="e.g. 100" value="100" oninput="window.updateTotalMarksDisplay(this.value)" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 text-sm bg-slate-50/50 font-bold text-indigo-600">
                         </div>
                     </div>
-
-                    <div id="examStudentsList" class="grid gap-3">
-                        ${students.map((s: any) => `
-                            <div class="student-mark-row flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100" data-class="${s.grade}-${s.section}">
-                                <div class="flex items-center gap-4">
-                                    <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-xs font-bold text-slate-400 border border-slate-100">
-                                        ${s.rollNo}
-                                    </div>
-                                    <div>
-                                        <div class="text-sm font-bold text-slate-900">${s.name}</div>
-                                        <div class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">${s.grade} ${s.section}</div>
-                                    </div>
-                                </div>
-                                <div class="flex items-center gap-4">
-                                    <input type="number" class="student-marks-input w-24 px-3 py-2 rounded-lg border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 text-sm" data-student-id="${s.id}" placeholder="Marks">
-                                    <span class="text-slate-400 text-sm">/ <span class="total-marks-display">100</span></span>
-                                </div>
-                            </div>
-                        `).join('')}
+                    <div class="mt-6 relative max-w-md">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                            ${getIcon('Search', 18)}
+                        </span>
+                        <input 
+                            type="text" 
+                            placeholder="Search students..." 
+                            value="${search}"
+                            oninput="window.handleExamSearch(this.value)"
+                            class="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                        >
                     </div>
+                </div>
+
+                <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
+                                <tr>
+                                    <th class="px-6 py-4 font-semibold">Roll No</th>
+                                    <th class="px-6 py-4 font-semibold">Student Name</th>
+                                    <th class="px-6 py-4 font-semibold">Class</th>
+                                    <th class="px-6 py-4 font-semibold text-right">Marks Obtained</th>
+                                </tr>
+                            </thead>
+                            <tbody id="examStudentsList" class="divide-y divide-slate-50">
+                                ${students.length > 0 ? students.map((s: any) => `
+                                    <tr class="student-mark-row hover:bg-slate-50/50 transition-colors" data-class-id="${s.classId}">
+                                        <td class="px-6 py-4 text-sm font-medium text-slate-900">${s.rollNo}</td>
+                                        <td class="px-6 py-4 text-sm text-slate-600">${s.name}</td>
+                                        <td class="px-6 py-4 text-sm text-slate-600">
+                                            <span class="px-2 py-1 bg-slate-100 rounded-lg font-bold text-[10px] uppercase">
+                                                ${s.classInfo ? `${s.classInfo.name} ${s.classInfo.section}` : 'N/A'}
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 text-right">
+                                            <div class="flex items-center justify-end gap-2">
+                                                <input type="number" class="student-marks-input w-24 px-3 py-2 rounded-lg border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 text-sm text-right font-medium" data-student-id="${s.id}" placeholder="0">
+                                                <span class="text-slate-400 text-sm font-bold">/ <span class="total-marks-display">100</span></span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `).join('') : `
+                                    <tr>
+                                        <td colspan="4" class="px-6 py-12 text-center text-slate-500 italic">No students found</td>
+                                    </tr>
+                                `}
+                            </tbody>
+                        </table>
+                    </div>
+                    ${renderPagination(total, page, totalPages, 'exams')}
                 </div>
             </div>
         `;
 
-        // Sync total marks display
-        const totalMarksInput = document.getElementById('totalMarks') as HTMLInputElement;
-        totalMarksInput?.addEventListener('input', (e) => {
-            const val = (e.target as HTMLInputElement).value || '100';
-            document.querySelectorAll('.total-marks-display').forEach(el => el.textContent = val);
-        });
-
     } catch (err) {
         console.error('Exams fetch error:', err);
+        dashboardContent.innerHTML = `<div class="p-8 text-center text-rose-600 font-medium">Failed to load exam entry form. Please try again.</div>`;
     }
 }
 
+(window as any).handleExamSearch = debounce((val: string) => {
+    moduleState.exams.search = val;
+    moduleState.exams.page = 1;
+    renderExamsModule();
+}, 300);
+
+(window as any).handleExamFilterChange = () => {
+    moduleState.exams.page = 1;
+    renderExamsModule();
+};
+
+(window as any).updateTotalMarksDisplay = (val: string) => {
+    const displays = document.querySelectorAll('.total-marks-display');
+    displays.forEach((d: any) => d.textContent = val || '100');
+};
+
 (window as any).filterExamStudents = () => {
-    const selectedClass = (document.getElementById('examClass') as HTMLSelectElement).value;
+    const selectedClassId = (document.getElementById('examClass') as HTMLSelectElement).value;
     const rows = document.querySelectorAll('.student-mark-row');
     rows.forEach((row: any) => {
-        if (!selectedClass || row.dataset.class === selectedClass) {
-            row.style.display = 'flex';
+        if (!selectedClassId || row.dataset.classId === selectedClassId) {
+            row.style.display = 'table-row';
         } else {
             row.style.display = 'none';
         }
@@ -1808,7 +2288,7 @@ async function renderTimetableModule(role: string, selectedClassId?: string) {
                     const studentData = await studentRes.json();
                     const student = studentData[0];
                     if (student) {
-                        classId = `${student.grade}-${student.section}`;
+                        classId = student.classId;
                     }
                 }
             } else if (role === 'Teaching Staff') {
@@ -1817,19 +2297,13 @@ async function renderTimetableModule(role: string, selectedClassId?: string) {
         }
 
         const query = classId ? `?classId=${classId}` : (teacherId ? `?teacherId=${teacherId}` : '');
-        const [timetableRes, staffRes, studentsRes] = await Promise.all([
+        const [timetableRes, classesRes] = await Promise.all([
             fetch(`/api/timetable${query}`),
-            fetch('/api/staff'),
-            fetch('/api/students')
+            fetch('/api/classes')
         ]);
 
         const timetable = await timetableRes.json();
-        const staff = await staffRes.json();
-        const students = await studentsRes.json();
-        
-        // Get unique classes for Admin selector
-        const classes = Array.from(new Set(students.map((s: any) => `${s.grade}-${s.section}`))).sort();
-        const staffMap = new Map(staff.map((s: any) => [s.id, s.name]));
+        const classes = await classesRes.json();
 
         const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
         const timeSlots = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00'];
@@ -1846,7 +2320,7 @@ async function renderTimetableModule(role: string, selectedClassId?: string) {
                             ${role === 'Admin' ? `
                                 <select id="classSelector" onchange="window.handleClassChange(this.value)" class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
                                     <option value="">All Classes</option>
-                                    ${classes.map(c => `<option value="${c}" ${classId === c ? 'selected' : ''}>${c}</option>`).join('')}
+                                    ${classes.map((c: any) => `<option value="${c.id}" ${classId === c.id ? 'selected' : ''}>${c.name} - ${c.section}</option>`).join('')}
                                 </select>
                                 <button onclick="window.showTimetableModal()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all flex items-center gap-2">
                                     ${getIcon('Plus')}
@@ -1875,9 +2349,9 @@ async function renderTimetableModule(role: string, selectedClassId?: string) {
                                                     <div class="space-y-2">
                                                         ${entries.map((entry: any) => `
                                                             <div class="bg-indigo-50 p-3 rounded-xl border border-indigo-100 relative group">
-                                                                <div class="font-bold text-indigo-700 text-sm">${entry.subject}</div>
-                                                                <div class="text-xs text-indigo-500 mt-1">${staffMap.get(entry.teacherId) || 'Unknown'}</div>
-                                                                <div class="text-[10px] text-indigo-400 mt-1">${entry.classId} | ${entry.startTime}-${entry.endTime}</div>
+                                                                <div class="font-bold text-indigo-700 text-sm">${entry.subjectInfo?.name || entry.subject}</div>
+                                                                <div class="text-xs text-indigo-500 mt-1">${entry.teacherInfo?.name || 'Unknown'}</div>
+                                                                <div class="text-[10px] text-indigo-400 mt-1">${entry.classInfo?.name || entry.classId} - ${entry.classInfo?.section || ''} | ${entry.startTime}-${entry.endTime}</div>
                                                                 ${role === 'Admin' ? `
                                                                     <div class="flex gap-2 mt-2">
                                                                         <button onclick="window.showTimetableModal('${entry.id}')" class="text-indigo-600 hover:text-indigo-800 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -1920,13 +2394,14 @@ async function renderTimetableModule(role: string, selectedClassId?: string) {
         entry = data.find((t: any) => t.id === id);
     }
 
-    const [staffRes, studentsRes] = await Promise.all([
+    const [staffRes, classesRes, subjectsRes] = await Promise.all([
         fetch('/api/staff'),
-        fetch('/api/students')
+        fetch('/api/classes'),
+        fetch('/api/subjects')
     ]);
     const staff = await staffRes.json();
-    const students = await studentsRes.json();
-    const classes = Array.from(new Set(students.map((s: any) => `${s.grade}-${s.section}`))).sort();
+    const classes = await classesRes.json();
+    const subjects = await subjectsRes.json();
 
     const modal = document.createElement('div');
     modal.className = 'fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-[60] p-4';
@@ -1943,7 +2418,7 @@ async function renderTimetableModule(role: string, selectedClassId?: string) {
                     <div class="space-y-2">
                         <label class="text-xs font-bold text-slate-500 uppercase">Class</label>
                         <select name="classId" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                            ${classes.map(c => `<option value="${c}" ${entry?.classId === c ? 'selected' : ''}>${c}</option>`).join('')}
+                            ${classes.map((c: any) => `<option value="${c.id}" ${entry?.classId === c.id ? 'selected' : ''}>${c.name} - ${c.section}</option>`).join('')}
                         </select>
                     </div>
                     <div class="space-y-2">
@@ -1955,7 +2430,9 @@ async function renderTimetableModule(role: string, selectedClassId?: string) {
                 </div>
                 <div class="space-y-2">
                     <label class="text-xs font-bold text-slate-500 uppercase">Subject</label>
-                    <input type="text" name="subject" value="${entry?.subject || ''}" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="e.g. Mathematics">
+                    <select name="subjectId" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        ${subjects.map((s: any) => `<option value="${s.id}" ${entry?.subjectId === s.id ? 'selected' : ''}>${s.name}</option>`).join('')}
+                    </select>
                 </div>
                 <div class="space-y-2">
                     <label class="text-xs font-bold text-slate-500 uppercase">Teacher</label>
@@ -2029,9 +2506,11 @@ async function renderStudentAttendance() {
     const user = getCurrentUser();
     if (!user || !user.studentId) return;
 
+    const { page, limit } = moduleState.attendance;
+
     try {
-        const res = await fetch(`/api/attendance?studentId=${user.studentId}`);
-        const attendance = await res.json();
+        const res = await fetch(`/api/attendance?studentId=${user.studentId}&page=${page}&limit=${limit}`);
+        const { data: attendance, total, totalPages } = await res.json();
 
         dashboardContent.innerHTML = `
             <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
@@ -2053,7 +2532,7 @@ async function renderStudentAttendance() {
                                 ${attendance.length > 0 ? attendance.map((a: any) => `
                                     <tr class="hover:bg-slate-50 transition-colors">
                                         <td class="px-6 py-4 text-sm text-slate-700">${a.date}</td>
-                                        <td class="px-6 py-4 text-sm text-slate-700 font-medium">${a.subject || 'General'}</td>
+                                        <td class="px-6 py-4 text-sm text-slate-700 font-medium">${a.subjectInfo?.name || 'General'}</td>
                                         <td class="px-6 py-4 text-sm text-slate-500">${a.time || 'N/A'}</td>
                                         <td class="px-6 py-4 text-sm">
                                             <span class="text-[10px] font-bold uppercase px-2 py-1 rounded-lg ${a.status === 'Present' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}">
@@ -2066,6 +2545,7 @@ async function renderStudentAttendance() {
                         </table>
                     </div>
                 </div>
+                ${renderPagination(total, page, totalPages, 'attendance_history')}
             </div>
         `;
     } catch (err) {
@@ -2080,14 +2560,11 @@ async function renderStudentResults() {
     const user = getCurrentUser();
     if (!user || !user.studentId) return;
 
+    const { page, limit } = moduleState.exams;
+
     try {
-        const [examsRes, subjectsRes] = await Promise.all([
-            fetch(`/api/exams?studentId=${user.studentId}`),
-            fetch('/api/subjects')
-        ]);
-        const results = await examsRes.json();
-        const subjects = await subjectsRes.json();
-        const subjectMap = new Map(subjects.map((s: any) => [s.id, s.name]));
+        const examsRes = await fetch(`/api/exams?studentId=${user.studentId}&page=${page}&limit=${limit}`);
+        const { data: results, total, totalPages } = await examsRes.json();
 
         dashboardContent.innerHTML = `
             <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
@@ -2100,7 +2577,7 @@ async function renderStudentResults() {
                             <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
                                 <div>
                                     <div class="text-sm font-bold text-slate-900">${r.examName || r.examType}</div>
-                                    <div class="text-xs text-slate-500">Subject: ${subjectMap.get(r.subjectId) || 'General'}</div>
+                                    <div class="text-xs text-slate-500">Subject: ${r.subjectInfo?.name || 'General'}</div>
                                 </div>
                                 <div class="text-right">
                                     <div class="text-lg font-bold text-indigo-600">${r.marks} / ${r.totalMarks || 100}</div>
@@ -2110,6 +2587,7 @@ async function renderStudentResults() {
                         `).join('') : '<div class="text-center py-12 text-slate-400">No exam results found.</div>'}
                     </div>
                 </div>
+                ${renderPagination(total, page, totalPages, 'results')}
             </div>
         `;
     } catch (err) {
@@ -2254,93 +2732,113 @@ async function renderParentResults() {
     renderStudentResults();
 }
 
-async function renderDocumentsModule(role: string, targetUserId?: string, targetUserName?: string) {
+async function renderDocumentsModule(role: string, targetUserId?: string, targetUserName?: string, targetUserRole?: string) {
     const dashboardContent = document.getElementById('dashboardContent');
     if (!dashboardContent) return;
 
     const user = getCurrentUser();
     if (!user) return;
 
+    const { search, page, limit } = moduleState.documents;
+
     try {
-        let query = `?userId=${user.id}&userRole=${role}`;
+        let query = `?userId=${user.id}&userRole=${role}&search=${search}&page=${page}&limit=${limit}`;
         if (targetUserId) {
             query += `&targetUserId=${targetUserId}`;
+        }
+        if (targetUserRole) {
+            query += `&targetUserRole=${targetUserRole}`;
         }
         if (role === 'Parent' && user.studentId) {
             query += `&studentId=${user.studentId}`;
         }
         
         const res = await fetch(`/api/documents${query}`);
-        const documents = await res.json();
+        const { data: documents, total, totalPages } = await res.json();
 
         dashboardContent.innerHTML = `
             <div class="space-y-6">
-                <div class="flex justify-between items-center">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
                         <h3 class="text-xl font-bold text-slate-900">
                             ${targetUserName ? `Documents for ${targetUserName}` : 'Document Management'}
                         </h3>
                         <p class="text-slate-500 text-sm">Manage and view documents</p>
                     </div>
-                    <div class="flex gap-3">
-                        <button onclick="window.renderDocumentsModule('${role}', ${targetUserId ? `'${targetUserId}', '${targetUserName}'` : ''})" class="p-2 text-slate-400 hover:text-indigo-600 transition-colors">
+                    <div class="flex flex-wrap gap-3 w-full md:w-auto">
+                        <div class="relative flex-1 md:flex-none">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+                                ${getIcon('Search')}
+                            </span>
+                            <input 
+                                type="text" 
+                                placeholder="Search documents..." 
+                                value="${search}"
+                                oninput="window.handleDocumentSearch(this.value, '${role}', ${targetUserId ? `'${targetUserId}', '${targetUserName}', '${targetUserRole}'` : 'undefined, undefined, undefined'})"
+                                class="pl-10 pr-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full md:w-64"
+                            >
+                        </div>
+                        <button onclick="window.renderDocumentsModule('${role}', ${targetUserId ? `'${targetUserId}', '${targetUserName}', '${targetUserRole}'` : ''})" class="p-2 text-slate-400 hover:text-indigo-600 transition-colors">
                             ${getIcon('RefreshCw')}
                         </button>
                         ${role !== 'Admin' ? `
                             <button onclick="window.showUploadModal()" class="bg-indigo-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all shadow-sm flex items-center gap-2">
                                 ${getIcon('Upload')}
-                                Upload Document
+                                Upload
                             </button>
                         ` : ''}
                     </div>
                 </div>
 
                 <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-                    <table class="w-full text-left">
-                        <thead>
-                            <tr class="bg-slate-50 border-b border-slate-100">
-                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">File Name</th>
-                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Type</th>
-                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Upload Date</th>
-                                ${role === 'Admin' || role === 'HR' ? `<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">User Role</th>` : ''}
-                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100">
-                            ${documents.length === 0 ? `
-                                <tr>
-                                    <td colspan="5" class="px-6 py-12 text-center text-slate-400">No documents found</td>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-100">
+                                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">File Name</th>
+                                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Type</th>
+                                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Upload Date</th>
+                                    ${role === 'Admin' || role === 'HR' ? `<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">User Role</th>` : ''}
+                                    <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Actions</th>
                                 </tr>
-                            ` : documents.map((doc: any) => `
-                                <tr class="hover:bg-slate-50/50 transition-colors">
-                                    <td class="px-6 py-4">
-                                        <div class="flex items-center gap-3">
-                                            <div class="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center text-indigo-600">
-                                                ${getIcon('FileText')}
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                ${documents.length === 0 ? `
+                                    <tr>
+                                        <td colspan="5" class="px-6 py-12 text-center text-slate-400">No documents found</td>
+                                    </tr>
+                                ` : documents.map((doc: any) => `
+                                    <tr class="hover:bg-slate-50/50 transition-colors">
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-8 h-8 bg-indigo-50 rounded-lg flex items-center justify-center text-indigo-600">
+                                                    ${getIcon('FileText')}
+                                                </div>
+                                                <span class="font-medium text-slate-900">${doc.fileName}</span>
                                             </div>
-                                            <span class="font-medium text-slate-900">${doc.fileName}</span>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4 text-sm text-slate-600">${doc.fileType.split('/')[1].toUpperCase()}</td>
-                                    <td class="px-6 py-4 text-sm text-slate-600">${doc.uploadDate}</td>
-                                    ${role === 'Admin' || role === 'HR' ? `<td class="px-6 py-4 text-sm text-slate-600">${doc.userRole}</td>` : ''}
-                                    <td class="px-6 py-4 text-right">
-                                        <div class="flex justify-end gap-2">
-                                            <a href="${doc.filePath}" target="_blank" class="p-2 text-slate-400 hover:text-indigo-600 transition-colors">
-                                                ${getIcon('Eye')}
-                                            </a>
-                                            <a href="${doc.filePath}" download="${doc.fileName}" class="p-2 text-slate-400 hover:text-indigo-600 transition-colors">
-                                                ${getIcon('Download')}
-                                            </a>
-                                            <button onclick="window.deleteDocument('${doc.id}')" class="p-2 text-slate-400 hover:text-rose-600 transition-colors">
-                                                ${getIcon('Trash2')}
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
+                                        </td>
+                                        <td class="px-6 py-4 text-sm text-slate-600">${doc.fileType.split('/')[1]?.toUpperCase() || 'FILE'}</td>
+                                        <td class="px-6 py-4 text-sm text-slate-600">${doc.uploadDate}</td>
+                                        ${role === 'Admin' || role === 'HR' ? `<td class="px-6 py-4 text-sm text-slate-600">${doc.userRole}</td>` : ''}
+                                        <td class="px-6 py-4 text-right">
+                                            <div class="flex justify-end gap-2">
+                                                <a href="${doc.filePath}" target="_blank" class="p-2 text-slate-400 hover:text-indigo-600 transition-colors">
+                                                    ${getIcon('Eye')}
+                                                </a>
+                                                <a href="${doc.filePath}" download="${doc.fileName}" class="p-2 text-slate-400 hover:text-indigo-600 transition-colors">
+                                                    ${getIcon('Download')}
+                                                </a>
+                                                <button onclick="window.deleteDocument('${doc.id}')" class="p-2 text-slate-400 hover:text-rose-600 transition-colors">
+                                                    ${getIcon('Trash2')}
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                    ${renderPagination(total, page, totalPages, 'documents', role)}
                 </div>
             </div>
 
@@ -2384,7 +2882,7 @@ async function renderDocumentsModule(role: string, targetUserId?: string, target
                     const result = await uploadRes.json();
                     if (result.success) {
                         (window as any).closeUploadModal();
-                        renderDocumentsModule(role);
+                        renderDocumentsModule(role, targetUserId, targetUserName, targetUserRole);
                     } else {
                         alert(result.message || 'Upload failed');
                     }
@@ -2403,8 +2901,14 @@ async function renderDocumentsModule(role: string, targetUserId?: string, target
 (window as any).viewUserDocuments = (userId: string, userRole: string, userName: string) => {
     const user = getCurrentUser();
     if (!user) return;
-    renderDocumentsModule(user.role, userId, userName);
+    renderDocumentsModule(user.role, userId, userName, userRole);
 };
+
+(window as any).handleDocumentSearch = debounce((val: string, role: string, targetUserId?: string, targetUserName?: string, targetUserRole?: string) => {
+    moduleState.documents.search = val;
+    moduleState.documents.page = 1;
+    renderDocumentsModule(role, targetUserId, targetUserName, targetUserRole);
+}, 300);
 
 (window as any).showUploadModal = () => {
     document.getElementById('uploadModal')?.classList.remove('hidden');
