@@ -111,6 +111,12 @@ function getIcon(name: string) {
         'Map': '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path></svg>',
         'Files': '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>',
         'Settings': '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>',
+        'Plus': '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>',
+        'Trash2': '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>',
+        'Download': '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>',
+        'Upload': '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>',
+        'RefreshCw': '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>',
+        'Eye': '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>',
     };
     return icons[name] || icons['LayoutDashboard'];
 }
@@ -403,11 +409,16 @@ async function renderStudentsModule(role: string = 'Admin') {
             <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
                 <div class="p-6 border-b border-slate-50 flex justify-between items-center">
                     <h3 class="font-bold text-slate-900">Student Management</h3>
-                    ${isAdmin ? `
-                    <button onclick="window.addStudent()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all">
-                        Add New Student
-                    </button>
-                    ` : ''}
+                    <div class="flex gap-3">
+                        <button onclick="window.renderStudentsModule('${role}')" class="p-2 text-slate-400 hover:text-indigo-600 transition-colors">
+                            ${getIcon('RefreshCw')}
+                        </button>
+                        ${isAdmin ? `
+                        <button onclick="window.addStudent()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all">
+                            Add New Student
+                        </button>
+                        ` : ''}
+                    </div>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left">
@@ -417,7 +428,7 @@ async function renderStudentsModule(role: string = 'Admin') {
                                 <th class="px-6 py-4 font-semibold">Name</th>
                                 <th class="px-6 py-4 font-semibold">Grade</th>
                                 <th class="px-6 py-4 font-semibold">Section</th>
-                                ${isAdmin ? '<th class="px-6 py-4 font-semibold">Actions</th>' : ''}
+                                <th class="px-6 py-4 font-semibold">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50">
@@ -427,12 +438,15 @@ async function renderStudentsModule(role: string = 'Admin') {
                                     <td class="px-6 py-4 text-sm text-slate-600">${s.name}</td>
                                     <td class="px-6 py-4 text-sm text-slate-600">${s.grade}</td>
                                     <td class="px-6 py-4 text-sm text-slate-600">${s.section}</td>
-                                    ${isAdmin ? `
                                     <td class="px-6 py-4 text-sm flex gap-3">
-                                        <button onclick="window.editStudent('${s.id}')" class="text-indigo-600 hover:text-indigo-800 font-medium">Edit</button>
+                                        <button onclick="window.viewUserDocuments('${s.id}', 'Student', '${s.name}')" class="text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1">
+                                            ${getIcon('Files')} Docs
+                                        </button>
+                                        ${isAdmin ? `
+                                        <button onclick="window.editStudent('${s.id}')" class="text-slate-600 hover:text-indigo-600 font-medium">Edit</button>
                                         <button onclick="window.deleteStudent('${s.id}')" class="text-rose-600 hover:text-rose-800 font-medium">Delete</button>
+                                        ` : ''}
                                     </td>
-                                    ` : ''}
                                 </tr>
                             `).join('')}
                         </tbody>
@@ -505,9 +519,14 @@ async function renderStaffModule() {
             <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
                 <div class="p-6 border-b border-slate-50 flex justify-between items-center">
                     <h3 class="font-bold text-slate-900">Staff Directory</h3>
-                    <button onclick="window.addStaff()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all">
-                        Add New Staff
-                    </button>
+                    <div class="flex gap-3">
+                        <button onclick="window.renderStaffModule()" class="p-2 text-slate-400 hover:text-indigo-600 transition-colors">
+                            ${getIcon('RefreshCw')}
+                        </button>
+                        <button onclick="window.addStaff()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all">
+                            Add New Staff
+                        </button>
+                    </div>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left">
@@ -526,7 +545,10 @@ async function renderStaffModule() {
                                     <td class="px-6 py-4 text-sm text-slate-600">${s.role}</td>
                                     <td class="px-6 py-4 text-sm text-slate-600">${s.subject || s.department || 'N/A'}</td>
                                     <td class="px-6 py-4 text-sm flex gap-3">
-                                        <button onclick="window.editStaff('${s.id}')" class="text-indigo-600 hover:text-indigo-800 font-medium">Edit</button>
+                                        <button onclick="window.viewUserDocuments('${s.id}', '${s.role}', '${s.name}')" class="text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1">
+                                            ${getIcon('Files')} Docs
+                                        </button>
+                                        <button onclick="window.editStaff('${s.id}')" class="text-slate-600 hover:text-indigo-600 font-medium">Edit</button>
                                         <button onclick="window.deleteStaff('${s.id}')" class="text-rose-600 hover:text-rose-800 font-medium">Delete</button>
                                     </td>
                                 </tr>
@@ -1687,7 +1709,7 @@ async function renderAcademicInfoModule() {
     renderMySubjectsModule();
 }
 
-async function renderTimetableModule(role: string) {
+async function renderTimetableModule(role: string, selectedClassId?: string) {
     const dashboardContent = document.getElementById('dashboardContent');
     if (!dashboardContent) return;
 
@@ -1695,153 +1717,226 @@ async function renderTimetableModule(role: string) {
     if (!user) return;
 
     try {
-        let classId = '';
+        let classId = selectedClassId || '';
         let teacherId = '';
 
-        if (role === 'Student' || role === 'Parent') {
-            const studentId = user.studentId;
-            if (studentId) {
-                const studentRes = await fetch(`/api/students?id=${studentId}`);
-                const studentData = await studentRes.json();
-                const student = studentData[0];
-                if (student) {
-                    classId = `${student.grade}-${student.section}`;
+        if (!selectedClassId) {
+            if (role === 'Student' || role === 'Parent') {
+                const studentId = user.studentId;
+                if (studentId) {
+                    const studentRes = await fetch(`/api/students?id=${studentId}`);
+                    const studentData = await studentRes.json();
+                    const student = studentData[0];
+                    if (student) {
+                        classId = `${student.grade}-${student.section}`;
+                    }
                 }
+            } else if (role === 'Teaching Staff') {
+                teacherId = (user as any).staffId || '1';
             }
-        } else if (role === 'Teaching Staff') {
-            // Assuming teacher has staffId in user object
-            teacherId = (user as any).staffId || '1'; // Fallback for demo
         }
 
         const query = classId ? `?classId=${classId}` : (teacherId ? `?teacherId=${teacherId}` : '');
-        const [timetableRes, staffRes] = await Promise.all([
+        const [timetableRes, staffRes, studentsRes] = await Promise.all([
             fetch(`/api/timetable${query}`),
-            fetch('/api/staff')
+            fetch('/api/staff'),
+            fetch('/api/students')
         ]);
 
         const timetable = await timetableRes.json();
         const staff = await staffRes.json();
+        const students = await studentsRes.json();
+        
+        // Get unique classes for Admin selector
+        const classes = Array.from(new Set(students.map((s: any) => `${s.grade}-${s.section}`))).sort();
         const staffMap = new Map(staff.map((s: any) => [s.id, s.name]));
 
         const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        const timeSlots = ['09:00', '10:00', '11:00', '12:00', '01:00', '02:00', '03:00'];
+        const timeSlots = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00'];
 
         dashboardContent.innerHTML = `
-            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="font-bold text-slate-900">Weekly Timetable ${classId ? `(${classId})` : ''}</h3>
-                    ${role === 'Admin' ? `
-                        <button onclick="window.addTimetableEntry()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all">
-                            Add Entry
-                        </button>
-                    ` : ''}
-                </div>
-                
-                <div class="overflow-x-auto">
-                    <table class="w-full border-collapse">
-                        <thead>
-                            <tr>
-                                <th class="p-4 border border-slate-100 bg-slate-50 text-slate-500 text-xs uppercase font-bold text-left">Time</th>
-                                ${days.map(day => `<th class="p-4 border border-slate-100 bg-slate-50 text-slate-500 text-xs uppercase font-bold text-center">${day}</th>`).join('')}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${timeSlots.map(slot => `
+            <div class="space-y-6">
+                <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                        <div>
+                            <h3 class="font-bold text-slate-900 text-xl">Weekly Timetable</h3>
+                            <p class="text-slate-500 text-sm">View and manage class schedules</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            ${role === 'Admin' ? `
+                                <select id="classSelector" onchange="window.handleClassChange(this.value)" class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <option value="">All Classes</option>
+                                    ${classes.map(c => `<option value="${c}" ${classId === c ? 'selected' : ''}>${c}</option>`).join('')}
+                                </select>
+                                <button onclick="window.showTimetableModal()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all flex items-center gap-2">
+                                    ${getIcon('Plus')}
+                                    Add Entry
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="w-full border-collapse">
+                            <thead>
                                 <tr>
-                                    <td class="p-4 border border-slate-100 text-sm font-medium text-slate-600 bg-slate-50">${slot}</td>
-                                    ${days.map(day => {
-                                        const entry = timetable.find((t: any) => t.day === day && t.startTime === slot);
-                                        return `
-                                            <td class="p-4 border border-slate-100 min-w-[150px] align-top">
-                                                ${entry ? `
-                                                    <div class="bg-indigo-50 p-3 rounded-xl border border-indigo-100 relative group">
-                                                        <div class="font-bold text-indigo-700 text-sm">${entry.subject}</div>
-                                                        <div class="text-xs text-indigo-500 mt-1">${staffMap.get(entry.teacherId) || 'Unknown'}</div>
-                                                        ${role === 'Admin' ? `
-                                                            <div class="text-[10px] text-indigo-400 mt-1">${entry.classId}</div>
-                                                            <div class="flex gap-2 mt-2">
-                                                                <button onclick="window.editTimetableEntry('${entry.id}')" class="text-indigo-600 hover:text-indigo-800 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                                                                </button>
-                                                                <button onclick="window.deleteTimetableEntry('${entry.id}')" class="text-rose-400 hover:text-rose-600 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                                                </button>
-                                                            </div>
-                                                        ` : ''}
-                                                    </div>
-                                                ` : ''}
-                                            </td>
-                                        `;
-                                    }).join('')}
+                                    <th class="p-4 border border-slate-100 bg-slate-50 text-slate-500 text-xs uppercase font-bold text-left w-24">Time</th>
+                                    ${days.map(day => `<th class="p-4 border border-slate-100 bg-slate-50 text-slate-500 text-xs uppercase font-bold text-center">${day}</th>`).join('')}
                                 </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                ${timeSlots.map(slot => `
+                                    <tr>
+                                        <td class="p-4 border border-slate-100 text-sm font-medium text-slate-600 bg-slate-50">${slot}</td>
+                                        ${days.map(day => {
+                                            const entries = timetable.filter((t: any) => t.day === day && t.startTime === slot);
+                                            return `
+                                                <td class="p-4 border border-slate-100 min-w-[180px] align-top">
+                                                    <div class="space-y-2">
+                                                        ${entries.map((entry: any) => `
+                                                            <div class="bg-indigo-50 p-3 rounded-xl border border-indigo-100 relative group">
+                                                                <div class="font-bold text-indigo-700 text-sm">${entry.subject}</div>
+                                                                <div class="text-xs text-indigo-500 mt-1">${staffMap.get(entry.teacherId) || 'Unknown'}</div>
+                                                                <div class="text-[10px] text-indigo-400 mt-1">${entry.classId} | ${entry.startTime}-${entry.endTime}</div>
+                                                                ${role === 'Admin' ? `
+                                                                    <div class="flex gap-2 mt-2">
+                                                                        <button onclick="window.showTimetableModal('${entry.id}')" class="text-indigo-600 hover:text-indigo-800 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                            ${getIcon('Edit')}
+                                                                        </button>
+                                                                        <button onclick="window.deleteTimetableEntry('${entry.id}')" class="text-rose-400 hover:text-rose-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                            ${getIcon('Trash2')}
+                                                                        </button>
+                                                                    </div>
+                                                                ` : ''}
+                                                            </div>
+                                                        `).join('')}
+                                                    </div>
+                                                </td>
+                                            `;
+                                        }).join('')}
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         `;
+
+        (window as any).handleClassChange = (val: string) => {
+            renderTimetableModule(role, val);
+        };
+
     } catch (err) {
         console.error('Timetable fetch error:', err);
     }
 }
 
-(window as any).addTimetableEntry = async () => {
-    const classId = prompt("Class ID (e.g., 10th-A):");
-    if (!classId) return;
-    const subject = prompt("Subject:");
-    const teacherId = prompt("Teacher ID:");
-    const day = prompt("Day (Monday-Saturday):");
-    const startTime = prompt("Start Time (HH:MM, e.g., 09:00):");
-    const endTime = prompt("End Time (HH:MM, e.g., 10:00):");
-
-    try {
-        const res = await fetch('/api/timetable', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ classId, subject, teacherId, day, startTime, endTime })
-        });
+(window as any).showTimetableModal = async (id?: string) => {
+    let entry: any = null;
+    if (id) {
+        const res = await fetch('/api/timetable');
         const data = await res.json();
-        if (!data.success) {
-            alert(data.message || "Failed to add entry");
-        } else {
-            renderTimetableModule('Admin');
-        }
-    } catch (err) {
-        console.error('Add timetable entry error:', err);
+        entry = data.find((t: any) => t.id === id);
     }
-};
 
-(window as any).editTimetableEntry = async (id: string) => {
-    const classId = prompt("Update Class ID (e.g., 10th-A):");
-    if (!classId) return;
-    const subject = prompt("Update Subject:");
-    const teacherId = prompt("Update Teacher ID:");
-    const day = prompt("Update Day (Monday-Saturday):");
-    const startTime = prompt("Update Start Time (HH:MM, e.g., 09:00):");
-    const endTime = prompt("Update End Time (HH:MM, e.g., 10:00):");
+    const [staffRes, studentsRes] = await Promise.all([
+        fetch('/api/staff'),
+        fetch('/api/students')
+    ]);
+    const staff = await staffRes.json();
+    const students = await studentsRes.json();
+    const classes = Array.from(new Set(students.map((s: any) => `${s.grade}-${s.section}`))).sort();
 
-    try {
-        const res = await fetch(`/api/timetable/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ classId, subject, teacherId, day, startTime, endTime })
-        });
-        const data = await res.json();
-        if (!data.success) {
-            alert(data.message || "Failed to update entry");
-        } else {
-            renderTimetableModule('Admin');
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-[60] p-4';
+    modal.innerHTML = `
+        <div class="bg-white rounded-3xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+                <h3 class="text-xl font-bold text-slate-900">${id ? 'Edit' : 'Add'} Timetable Entry</h3>
+                <button onclick="this.closest('.fixed').remove()" class="text-slate-400 hover:text-slate-600 transition-colors">
+                    ${getIcon('X')}
+                </button>
+            </div>
+            <form id="timetableForm" class="p-6 space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold text-slate-500 uppercase">Class</label>
+                        <select name="classId" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            ${classes.map(c => `<option value="${c}" ${entry?.classId === c ? 'selected' : ''}>${c}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold text-slate-500 uppercase">Day</label>
+                        <select name="day" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            ${['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(d => `<option value="${d}" ${entry?.day === d ? 'selected' : ''}>${d}</option>`).join('')}
+                        </select>
+                    </div>
+                </div>
+                <div class="space-y-2">
+                    <label class="text-xs font-bold text-slate-500 uppercase">Subject</label>
+                    <input type="text" name="subject" value="${entry?.subject || ''}" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="e.g. Mathematics">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-xs font-bold text-slate-500 uppercase">Teacher</label>
+                    <select name="teacherId" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        ${staff.map((s: any) => `<option value="${s.id}" ${entry?.teacherId === s.id ? 'selected' : ''}>${s.name}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold text-slate-500 uppercase">Start Time</label>
+                        <input type="time" name="startTime" value="${entry?.startTime || '09:00'}" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold text-slate-500 uppercase">End Time</label>
+                        <input type="time" name="endTime" value="${entry?.endTime || '10:00'}" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                </div>
+                <div class="pt-4 flex gap-3">
+                    <button type="button" onclick="this.closest('.fixed').remove()" class="flex-1 px-6 py-2.5 rounded-xl text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all">Cancel</button>
+                    <button type="submit" class="flex-1 px-6 py-2.5 rounded-xl text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition-all shadow-sm">
+                        ${id ? 'Update' : 'Add'} Entry
+                    </button>
+                </div>
+            </form>
+        </div>
+    `;
+    document.body.appendChild(modal);
+
+    const form = modal.querySelector('#timetableForm') as HTMLFormElement;
+    form.onsubmit = async (e) => {
+        e.preventDefault();
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+
+        try {
+            const res = await fetch(id ? `/api/timetable/${id}` : '/api/timetable', {
+                method: id ? 'PUT' : 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            if (result.success) {
+                modal.remove();
+                renderTimetableModule('Admin', data.classId as string);
+            } else {
+                alert(result.message || "Operation failed");
+            }
+        } catch (err) {
+            console.error('Timetable save error:', err);
         }
-    } catch (err) {
-        console.error('Edit timetable entry error:', err);
-    }
+    };
 };
 
 (window as any).deleteTimetableEntry = async (id: string) => {
-    if (!confirm("Delete this timetable entry?")) return;
+    if (!confirm("Are you sure you want to delete this entry?")) return;
     try {
-        await fetch(`/api/timetable/${id}`, { method: 'DELETE' });
-        renderTimetableModule('Admin');
+        const res = await fetch(`/api/timetable/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+            renderTimetableModule('Admin');
+        }
     } catch (err) {
         console.error('Delete timetable entry error:', err);
     }
@@ -2071,7 +2166,7 @@ async function renderParentResults() {
     renderStudentResults();
 }
 
-async function renderDocumentsModule(role: string) {
+async function renderDocumentsModule(role: string, targetUserId?: string, targetUserName?: string) {
     const dashboardContent = document.getElementById('dashboardContent');
     if (!dashboardContent) return;
 
@@ -2079,7 +2174,11 @@ async function renderDocumentsModule(role: string) {
     if (!user) return;
 
     try {
-        const query = `?userId=${user.id}&userRole=${role}`;
+        let query = `?userId=${user.id}&userRole=${role}`;
+        if (targetUserId) {
+            query += `&targetUserId=${targetUserId}`;
+        }
+        
         const res = await fetch(`/api/documents${query}`);
         const documents = await res.json();
 
@@ -2087,15 +2186,22 @@ async function renderDocumentsModule(role: string) {
             <div class="space-y-6">
                 <div class="flex justify-between items-center">
                     <div>
-                        <h3 class="text-xl font-bold text-slate-900">Document Management</h3>
-                        <p class="text-slate-500 text-sm">Manage and view your documents</p>
+                        <h3 class="text-xl font-bold text-slate-900">
+                            ${targetUserName ? `Documents for ${targetUserName}` : 'Document Management'}
+                        </h3>
+                        <p class="text-slate-500 text-sm">Manage and view documents</p>
                     </div>
-                    ${role !== 'Admin' ? `
-                        <button onclick="window.showUploadModal()" class="bg-indigo-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all shadow-sm flex items-center gap-2">
-                            ${getIcon('UserPlus')}
-                            Upload Document
+                    <div class="flex gap-3">
+                        <button onclick="window.renderDocumentsModule('${role}', ${targetUserId ? `'${targetUserId}', '${targetUserName}'` : ''})" class="p-2 text-slate-400 hover:text-indigo-600 transition-colors">
+                            ${getIcon('RefreshCw')}
                         </button>
-                    ` : ''}
+                        ${role !== 'Admin' ? `
+                            <button onclick="window.showUploadModal()" class="bg-indigo-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all shadow-sm flex items-center gap-2">
+                                ${getIcon('Upload')}
+                                Upload Document
+                            </button>
+                        ` : ''}
+                    </div>
                 </div>
 
                 <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
@@ -2130,10 +2236,13 @@ async function renderDocumentsModule(role: string) {
                                     <td class="px-6 py-4 text-right">
                                         <div class="flex justify-end gap-2">
                                             <a href="${doc.filePath}" target="_blank" class="p-2 text-slate-400 hover:text-indigo-600 transition-colors">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                                ${getIcon('Eye')}
+                                            </a>
+                                            <a href="${doc.filePath}" download="${doc.fileName}" class="p-2 text-slate-400 hover:text-indigo-600 transition-colors">
+                                                ${getIcon('Download')}
                                             </a>
                                             <button onclick="window.deleteDocument('${doc.id}')" class="p-2 text-slate-400 hover:text-rose-600 transition-colors">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                                ${getIcon('Trash2')}
                                             </button>
                                         </div>
                                     </td>
@@ -2199,6 +2308,12 @@ async function renderDocumentsModule(role: string) {
         console.error('Documents fetch error:', err);
     }
 }
+
+(window as any).viewUserDocuments = (userId: string, userRole: string, userName: string) => {
+    const user = getCurrentUser();
+    if (!user) return;
+    renderDocumentsModule(user.role, userId, userName);
+};
 
 (window as any).showUploadModal = () => {
     document.getElementById('uploadModal')?.classList.remove('hidden');

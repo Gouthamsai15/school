@@ -359,6 +359,10 @@ async function startServer() {
   app.post("/api/timetable", (req, res) => {
     const { classId, subject, teacherId, day, startTime, endTime } = req.body;
 
+    if (!startTime || !endTime || startTime >= endTime) {
+      return res.status(400).json({ success: false, message: "Invalid time range. Start time must be before end time." });
+    }
+
     // Helper to check overlap
     const isOverlapping = (start1: string, end1: string, start2: string, end2: string) => {
       return (start1 < end2 && end1 > start2);
@@ -389,6 +393,10 @@ async function startServer() {
     const { classId, subject, teacherId, day, startTime, endTime } = req.body;
     const index = db.timetable.findIndex(t => t.id === req.params.id);
     if (index === -1) return res.status(404).json({ success: false });
+
+    if (!startTime || !endTime || startTime >= endTime) {
+      return res.status(400).json({ success: false, message: "Invalid time range. Start time must be before end time." });
+    }
 
     // Helper to check overlap
     const isOverlapping = (start1: string, end1: string, start2: string, end2: string) => {
@@ -527,16 +535,28 @@ async function startServer() {
   });
 
   app.get("/api/documents", (req, res) => {
-    const { userId, userRole } = req.query;
+    const { userId, userRole, targetUserId, targetUserRole } = req.query;
     let filtered = db.documents;
+
+    // If targetUserId is provided, filter by it (Admin/HR only or self)
+    if (targetUserId) {
+      if (userRole === "Admin" || userRole === "HR" || userId === targetUserId) {
+        filtered = db.documents.filter(d => d.userId === targetUserId);
+        if (targetUserRole) {
+          filtered = filtered.filter(d => d.userRole === targetUserRole);
+        }
+        return res.json(filtered);
+      }
+    }
+
     if (userRole === "Admin") {
       // Admin sees all
     } else if (userRole === "HR") {
       // HR sees staff documents
       filtered = filtered.filter(doc => doc.userRole === "Teaching Staff" || doc.userRole === "Non-Teaching Staff" || doc.userRole === "HR");
-    } else if (userId) {
-      // Others see their own
-      filtered = filtered.filter(doc => doc.userId === userId);
+    } else if (userId && userRole) {
+      // Others see their own, matched by both ID and Role to avoid conflicts with shared IDs
+      filtered = filtered.filter(doc => doc.userId === userId && doc.userRole === userRole);
     } else {
       return res.status(403).json({ success: false, message: "Unauthorized" });
     }
