@@ -306,16 +306,34 @@ async function startServer() {
 
   // Exams API
   app.get("/api/exams", (req, res) => {
-    const { studentId } = req.query;
-    if (studentId) {
-      return res.json(db.exams.filter(e => e.studentId === studentId));
-    }
-    res.json(db.exams);
+    const { studentId, examName, subjectId } = req.query;
+    let results = db.exams;
+    if (studentId) results = results.filter(e => e.studentId === studentId);
+    if (examName) results = results.filter(e => e.examName === examName);
+    if (subjectId) results = results.filter(e => e.subjectId === subjectId);
+    res.json(results);
   });
   app.post("/api/exams", (req, res) => {
-    const record = { id: Date.now().toString(), ...req.body };
-    db.exams.push(record);
-    res.json({ success: true, record });
+    const { marksData } = req.body; // Expecting an array of { studentId, subjectId, marks, totalMarks, examName }
+    if (Array.isArray(marksData)) {
+      marksData.forEach(item => {
+        const existingIndex = db.exams.findIndex(e => 
+          e.studentId === item.studentId && 
+          e.subjectId === item.subjectId && 
+          e.examName === item.examName
+        );
+        if (existingIndex !== -1) {
+          db.exams[existingIndex] = { ...db.exams[existingIndex], ...item };
+        } else {
+          db.exams.push({ id: Date.now().toString() + Math.random(), ...item });
+        }
+      });
+      res.json({ success: true, message: "Marks saved successfully" });
+    } else {
+      const record = { id: Date.now().toString(), ...req.body };
+      db.exams.push(record);
+      res.json({ success: true, record });
+    }
   });
 
   // Dashboard Stats
@@ -535,12 +553,12 @@ async function startServer() {
   });
 
   app.get("/api/documents", (req, res) => {
-    const { userId, userRole, targetUserId, targetUserRole } = req.query;
+    const { userId, userRole, targetUserId, targetUserRole, studentId } = req.query;
     let filtered = db.documents;
 
     // If targetUserId is provided, filter by it (Admin/HR only or self)
     if (targetUserId) {
-      if (userRole === "Admin" || userRole === "HR" || userId === targetUserId) {
+      if (userRole === "Admin" || userRole === "HR" || userId === targetUserId || userRole === "Teaching Staff") {
         filtered = db.documents.filter(d => d.userId === targetUserId);
         if (targetUserRole) {
           filtered = filtered.filter(d => d.userRole === targetUserRole);
@@ -554,8 +572,14 @@ async function startServer() {
     } else if (userRole === "HR") {
       // HR sees staff documents
       filtered = filtered.filter(doc => doc.userRole === "Teaching Staff" || doc.userRole === "Non-Teaching Staff" || doc.userRole === "HR");
+    } else if (userRole === "Teaching Staff") {
+      // Teachers see their own and all students' documents
+      filtered = filtered.filter(doc => (doc.userId === userId && doc.userRole === userRole) || doc.userRole === "Student");
+    } else if (userRole === "Parent" && studentId) {
+      // Parents see their own and their child's documents
+      filtered = filtered.filter(doc => (doc.userId === userId && doc.userRole === userRole) || (doc.userId === studentId && doc.userRole === "Student"));
     } else if (userId && userRole) {
-      // Others see their own, matched by both ID and Role to avoid conflicts with shared IDs
+      // Others see their own
       filtered = filtered.filter(doc => doc.userId === userId && doc.userRole === userRole);
     } else {
       return res.status(403).json({ success: false, message: "Unauthorized" });

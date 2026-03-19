@@ -1265,34 +1265,72 @@ async function renderExamsModule() {
     const dashboardContent = document.getElementById('dashboardContent');
     if (!dashboardContent) return;
 
+    const user = getCurrentUser();
+    if (!user) return;
+
     try {
-        const res = await fetch('/api/students');
-        const students = await res.json();
+        const [studentsRes, classesRes, subjectsRes] = await Promise.all([
+            fetch('/api/students'),
+            fetch('/api/classes'),
+            fetch('/api/subjects')
+        ]);
+        const students = await studentsRes.json();
+        const classes = await classesRes.json();
+        const subjects = await subjectsRes.json();
 
         dashboardContent.innerHTML = `
             <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-                <div class="p-6 border-b border-slate-50">
+                <div class="p-6 border-b border-slate-50 flex justify-between items-center">
                     <h3 class="font-bold text-slate-900">Enter Exam Marks</h3>
+                    <button onclick="window.saveAllMarks()" class="bg-indigo-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all shadow-sm">
+                        Save All Marks
+                    </button>
                 </div>
                 <div class="p-6">
-                    <div class="mb-6">
-                        <label class="block text-sm font-semibold text-slate-700 mb-2">Select Exam</label>
-                        <select id="examType" class="w-full px-4 py-3 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500">
-                            <option>Mid-Term Exam</option>
-                            <option>Final Exam</option>
-                            <option>Unit Test 1</option>
-                        </select>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Select Class</label>
+                            <select id="examClass" onchange="window.filterExamStudents()" class="w-full px-4 py-2 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                                <option value="">All Classes</option>
+                                ${classes.map((c: any) => `<option value="${c.name}-${c.section}">${c.name} ${c.section}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Select Subject</label>
+                            <select id="examSubject" class="w-full px-4 py-2 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                                ${subjects.map((s: any) => `<option value="${s.id}">${s.name}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Exam Type</label>
+                            <select id="examType" class="w-full px-4 py-2 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                                <option>Mid-Term Exam</option>
+                                <option>Final Exam</option>
+                                <option>Unit Test 1</option>
+                                <option>Unit Test 2</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Total Marks</label>
+                            <input type="number" id="totalMarks" placeholder="e.g. 100" class="w-full px-4 py-2 rounded-xl border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
+                        </div>
                     </div>
-                    <div class="grid gap-4">
+
+                    <div id="examStudentsList" class="grid gap-3">
                         ${students.map((s: any) => `
-                            <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                            <div class="student-mark-row flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100" data-class="${s.grade}-${s.section}">
                                 <div class="flex items-center gap-4">
-                                    <div class="text-sm font-bold text-slate-900">${s.rollNo}</div>
-                                    <div class="text-sm font-medium text-slate-700">${s.name}</div>
+                                    <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-xs font-bold text-slate-400 border border-slate-100">
+                                        ${s.rollNo}
+                                    </div>
+                                    <div>
+                                        <div class="text-sm font-bold text-slate-900">${s.name}</div>
+                                        <div class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">${s.grade} ${s.section}</div>
+                                    </div>
                                 </div>
                                 <div class="flex items-center gap-4">
-                                    <input type="number" id="marks-${s.id}" placeholder="Marks" class="w-24 px-3 py-2 rounded-lg border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 text-sm">
-                                    <button onclick="window.saveMarks('${s.id}')" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-indigo-700 transition-all">Save</button>
+                                    <input type="number" class="student-marks-input w-24 px-3 py-2 rounded-lg border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 text-sm" data-student-id="${s.id}" placeholder="Marks">
+                                    <span class="text-slate-400 text-sm">/ <span class="total-marks-display">100</span></span>
                                 </div>
                             </div>
                         `).join('')}
@@ -1300,30 +1338,72 @@ async function renderExamsModule() {
                 </div>
             </div>
         `;
+
+        // Sync total marks display
+        const totalMarksInput = document.getElementById('totalMarks') as HTMLInputElement;
+        totalMarksInput?.addEventListener('input', (e) => {
+            const val = (e.target as HTMLInputElement).value || '100';
+            document.querySelectorAll('.total-marks-display').forEach(el => el.textContent = val);
+        });
+
     } catch (err) {
         console.error('Exams fetch error:', err);
     }
 }
 
-(window as any).saveMarks = async (studentId: string) => {
-    const marksInput = document.getElementById(`marks-${studentId}`) as HTMLInputElement;
-    const examType = (document.getElementById('examType') as HTMLSelectElement).value;
-    const marks = marksInput?.value;
+(window as any).filterExamStudents = () => {
+    const selectedClass = (document.getElementById('examClass') as HTMLSelectElement).value;
+    const rows = document.querySelectorAll('.student-mark-row');
+    rows.forEach((row: any) => {
+        if (!selectedClass || row.dataset.class === selectedClass) {
+            row.style.display = 'flex';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+};
 
-    if (!marks) {
-        alert("Please enter marks");
+(window as any).saveAllMarks = async () => {
+    const examType = (document.getElementById('examType') as HTMLSelectElement).value;
+    const subjectId = (document.getElementById('examSubject') as HTMLSelectElement).value;
+    const totalMarks = parseInt((document.getElementById('totalMarks') as HTMLInputElement).value) || 100;
+    
+    const markInputs = document.querySelectorAll('.student-marks-input');
+    const marksData: any[] = [];
+
+    markInputs.forEach((input: any) => {
+        const marks = input.value;
+        if (marks !== "") {
+            marksData.push({
+                studentId: input.dataset.studentId,
+                subjectId,
+                examName: examType,
+                marks: parseInt(marks),
+                totalMarks
+            });
+        }
+    });
+
+    if (marksData.length === 0) {
+        alert("Please enter marks for at least one student.");
         return;
     }
 
     try {
-        await fetch('/api/exams', {
+        const res = await fetch('/api/exams', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ studentId, examType, marks })
+            body: JSON.stringify({ marksData })
         });
-        alert(`Marks saved for student ${studentId}`);
+        const data = await res.json();
+        if (data.success) {
+            alert("All marks saved successfully!");
+        } else {
+            alert("Failed to save marks.");
+        }
     } catch (err) {
-        console.error('Save marks error:', err);
+        console.error('Save all marks error:', err);
+        alert("Error saving marks.");
     }
 };
 
@@ -2001,8 +2081,13 @@ async function renderStudentResults() {
     if (!user || !user.studentId) return;
 
     try {
-        const res = await fetch(`/api/exams?studentId=${user.studentId}`);
-        const results = await res.json();
+        const [examsRes, subjectsRes] = await Promise.all([
+            fetch(`/api/exams?studentId=${user.studentId}`),
+            fetch('/api/subjects')
+        ]);
+        const results = await examsRes.json();
+        const subjects = await subjectsRes.json();
+        const subjectMap = new Map(subjects.map((s: any) => [s.id, s.name]));
 
         dashboardContent.innerHTML = `
             <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
@@ -2014,10 +2099,13 @@ async function renderStudentResults() {
                         ${results.length > 0 ? results.map((r: any) => `
                             <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
                                 <div>
-                                    <div class="text-sm font-bold text-slate-900">${r.examType}</div>
-                                    <div class="text-xs text-slate-500">Subject: General</div>
+                                    <div class="text-sm font-bold text-slate-900">${r.examName || r.examType}</div>
+                                    <div class="text-xs text-slate-500">Subject: ${subjectMap.get(r.subjectId) || 'General'}</div>
                                 </div>
-                                <div class="text-lg font-bold text-indigo-600">${r.marks}%</div>
+                                <div class="text-right">
+                                    <div class="text-lg font-bold text-indigo-600">${r.marks} / ${r.totalMarks || 100}</div>
+                                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">${Math.round((r.marks / (r.totalMarks || 100)) * 100)}%</div>
+                                </div>
                             </div>
                         `).join('') : '<div class="text-center py-12 text-slate-400">No exam results found.</div>'}
                     </div>
@@ -2177,6 +2265,9 @@ async function renderDocumentsModule(role: string, targetUserId?: string, target
         let query = `?userId=${user.id}&userRole=${role}`;
         if (targetUserId) {
             query += `&targetUserId=${targetUserId}`;
+        }
+        if (role === 'Parent' && user.studentId) {
+            query += `&studentId=${user.studentId}`;
         }
         
         const res = await fetch(`/api/documents${query}`);
