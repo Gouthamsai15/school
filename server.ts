@@ -74,6 +74,22 @@ async function startServer() {
       { id: "1", userId: "1", userRole: "Student", fileName: "Report_Card.pdf", fileType: "application/pdf", uploadDate: "2026-03-10", filePath: "/uploads/1710840000000-Report_Card.pdf" },
       { id: "2", userId: "1", userRole: "Teaching Staff", fileName: "Lesson_Plan.pdf", fileType: "application/pdf", uploadDate: "2026-03-12", filePath: "/uploads/1710840000001-Lesson_Plan.pdf" }
     ],
+    library: [
+      { id: "1", title: "Introduction to Algorithms", author: "CLRS", status: "Available" },
+      { id: "2", title: "Clean Code", author: "Robert C. Martin", status: "Issued" }
+    ],
+    inventory: [
+      { id: "1", item: "Chalk Box", quantity: 50, category: "Stationery" },
+      { id: "2", item: "Football", quantity: 10, category: "Sports" }
+    ],
+    hostel: [
+      { id: "1", roomNo: "101", capacity: 4, occupied: 2, status: "Active" },
+      { id: "2", roomNo: "102", capacity: 4, occupied: 4, status: "Full" }
+    ],
+    events: [
+      { id: "1", title: "Annual Sports Day", date: "2026-04-15", location: "Main Ground" },
+      { id: "2", title: "Science Fair", date: "2026-05-10", location: "Auditorium" }
+    ],
     settings: {
       schoolName: "INDDIA International School",
       academicYear: "2025-26",
@@ -506,6 +522,67 @@ async function startServer() {
       feesCollected: db.fees.filter(f => f.status === "Paid").reduce((acc, f) => acc + f.amount, 0),
       attendanceRate: "94%"
     });
+  });
+
+  app.get("/api/dashboard-stats", (req, res) => {
+    const { role } = req.query;
+    if (role === 'Admin') {
+      res.json({
+        stats: [
+          { label: 'Total Students', value: db.students.length, icon: 'Users', color: 'indigo' },
+          { label: 'Total Staff', value: db.staff.length, icon: 'UserSquare2', color: 'emerald' },
+          { label: 'Active Classes', value: db.classes.length, icon: 'School', color: 'amber' },
+          { label: 'Today Attendance', value: '94%', icon: 'CalendarCheck', color: 'rose' }
+        ],
+        recentActivity: [
+          { id: 1, title: 'New Student Admitted', time: '2 hours ago', type: 'admission' },
+          { id: 2, title: 'Staff Meeting Scheduled', time: '4 hours ago', type: 'event' },
+          { id: 3, title: 'Monthly Fees Processed', time: '1 day ago', type: 'finance' }
+        ]
+      });
+    } else if (role === 'Teaching Staff') {
+      res.json({
+        stats: [
+          { label: 'My Classes', value: 3, icon: 'School', color: 'indigo' },
+          { label: 'My Students', value: 120, icon: 'Users', color: 'emerald' },
+          { label: 'Today Attendance', value: '98%', icon: 'CalendarCheck', color: 'amber' },
+          { label: 'Pending Exams', value: 2, icon: 'FileText', color: 'rose' }
+        ],
+        recentActivity: [
+          { id: 1, title: 'Attendance Marked for 10th A', time: '1 hour ago', type: 'attendance' },
+          { id: 2, title: 'Exam Marks Uploaded', time: '3 hours ago', type: 'exam' }
+        ]
+      });
+    } else {
+      res.json({
+        stats: [
+          { label: 'Attendance', value: '96%', icon: 'CalendarCheck', color: 'indigo' },
+          { label: 'Current Grade', value: 'A', icon: 'GraduationCap', color: 'emerald' },
+          { label: 'Fees Status', value: 'Paid', icon: 'CreditCard', color: 'amber' },
+          { label: 'Library Books', value: 2, icon: 'BookOpen', color: 'rose' }
+        ],
+        recentActivity: [
+          { id: 1, title: 'Math Homework Submitted', time: 'Yesterday', type: 'task' },
+          { id: 2, title: 'Library Book Issued', time: '2 days ago', type: 'library' }
+        ]
+      });
+    }
+  });
+
+  app.get("/api/library", (req, res) => {
+    res.json(db.library);
+  });
+
+  app.get("/api/inventory", (req, res) => {
+    res.json(db.inventory);
+  });
+
+  app.get("/api/hostel", (req, res) => {
+    res.json(db.hostel);
+  });
+
+  app.get("/api/events", (req, res) => {
+    res.json(db.events);
   });
 
   // Protected Mock Routes
